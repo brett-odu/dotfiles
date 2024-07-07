@@ -9,28 +9,37 @@ if [ "$INSTALL_OH_MY_ZSH" = true ]; then
   sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 fi
 
-# Install Powerlevel10k
-if [ "$INSTALL_POWERLEVEL10K" = true ]; then
-  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k
-fi
-
-# Install Oh My Zsh plugins
+# Ensure the custom directory is set
 ZSH_CUSTOM=${ZSH_CUSTOM:-~/.oh-my-zsh/custom}
 
+# Install zsh-syntax-highlighting
 if [ ! -d "$ZSH_CUSTOM/plugins/zsh-syntax-highlighting" ]; then
   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $ZSH_CUSTOM/plugins/zsh-syntax-highlighting
 fi
 
+# Install zsh-autosuggestions
 if [ ! -d "$ZSH_CUSTOM/plugins/zsh-autosuggestions" ]; then
   git clone https://github.com/zsh-users/zsh-autosuggestions.git $ZSH_CUSTOM/plugins/zsh-autosuggestions
 fi
 
+# Install Powerlevel10k theme
+if [ ! -d "$ZSH_CUSTOM/themes/powerlevel10k" ]; then
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git $ZSH_CUSTOM/themes/powerlevel10k
+fi
+
+# Install Vim-Plug for Neovim
+curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+# Define the absolute path to the dotfiles directory
+DOTFILES_DIR=~/dotfiles
+
 # Symlink dotfiles
-ln -sf ~/dotfiles/.config/zsh/.zshrc ~/.zshrc
-ln -sf ~/dotfiles/.config/wezterm ~/.config/wezterm
-ln -sf ~/dotfiles/.config/starship.toml ~/.config/starship.toml
-ln -sf ~/dotfiles/.config/nvim ~/.config/nvim
-ln -sf ~/dotfiles/.config/tmux/.tmux.conf ~/.tmux.conf
+ln -sf ${DOTFILES_DIR}/.config/zsh/.zshrc ~/.zshrc
+ln -sf ${DOTFILES_DIR}/.config/wezterm ~/.config/wezterm
+ln -sf ${DOTFILES_DIR}/.config/starship.toml ~/.config/starship.toml
+ln -sf ${DOTFILES_DIR}/.config/nvim ~/.config/nvim
+ln -sf ${DOTFILES_DIR}/.config/tmux/.tmux.conf ~/.tmux.conf
 
 # Ensure Starship is initialized in .zshrc
 if ! grep -q 'eval "$(starship init zsh)"' ~/.zshrc; then
