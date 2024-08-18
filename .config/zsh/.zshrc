@@ -9,6 +9,7 @@ plugins=(
     zsh-syntax-highlighting
     zsh-navigation-tools
     you-should-use
+    poetry
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -18,6 +19,15 @@ export PATH="$PATH:/opt/nvim-linux64/bin"
 
 # Initialize starship prompt
 eval "$(starship init zsh)"
+
+# pyenv
+export PYENV_ROOT="$HOME/.pyenv"
+[[ -d $PYENV_ROOT/bin ]] && export PATH="$PYENV_ROOT/bin:$PATH"
+eval "$(pyenv init --path)"
+eval "$(pyenv init -)"
+
+# Golang
+PATH=$PATH:/usr/local/go/bin
 
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
