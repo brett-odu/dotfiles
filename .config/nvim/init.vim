@@ -27,4 +27,3 @@ command! -bang -nargs=* FindFiles call fzf#vim#files('', {'options': '--layout=r
 
 " CoC settings
 let g:coc_global_extensions = ['coc-json', 'coc-tsserver', 'coc-pyright']
-
