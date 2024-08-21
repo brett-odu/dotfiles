@@ -5,7 +5,7 @@ return {
     "JetBrains Mono",
     "Fira Code",
   }),
-  font_size = 12.0,
+  font_size = 10.0,
   color_scheme = "Chalk",
   enable_tab_bar = true,
   hide_tab_bar_if_only_one_tab = false,
