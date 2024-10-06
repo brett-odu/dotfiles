@@ -22,7 +22,6 @@
             "filetypes": ["go"]
         }
     },
-    "python.pythonPath": "~/.pyenv/shims/python3",
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": ["--line-length", "79"],
     "python.linting.enabled": true,
@@ -32,8 +31,12 @@
     "python.analysis.diagnosticSeverityOverrides": {
         "reportGeneralTypeIssues": "warning"
     },
-    "python.analysis.autoImportCompletions": true,
-    "python.analysis.diagnosticMode": "workspace",
+    "python.pythonPath": "${workspaceFolder}/.venv/bin/python",
+    "python.venvPath": "${workspaceFolder}/.venv",
     "python.analysis.autoSearchPaths": true,
-    "python.analysis.useLibraryCodeForTypes": true
+    "python.analysis.useLibraryCodeForTypes": true,
+    "python.analysis.diagnosticMode": "workspace",
+    "python.analysis.autoImportCompletions": true,
+    "python.analysis.logLevel": "Trace",
+    "pyright.trace.server": "verbose"
 }

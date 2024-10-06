@@ -5,6 +5,7 @@ call plug#begin('~/.vim/plugged')
 Plug 'junegunn/vim-easy-align'
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim'
+Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 Plug 'windwp/nvim-autopairs'
 
@@ -31,14 +32,15 @@ set shiftwidth=4
 set expandtab
 set autoindent
 
+let mapleader=","
+noremap \ ,
+
 " FZF settings
 set rtp+=~/.fzf
 command! -bang -nargs=* FindFiles call fzf#vim#files('', {'options': '--layout=reverse'}, <bang>0)
 
 " CoC settings
-" let g:coc_global_extensions = ['coc-docker', 'coc-go', 'coc-golines', 'coc-json', 'coc-markdownlint', 'coc-pyright']
-
-let g:coc_global_extensions = ['coc-pyright']
+let g:coc_global_extensions = ['coc-docker', 'coc-go', 'coc-golines', 'coc-json', 'coc-markdownlint', 'coc-pyright']
 
 " https://raw.githubusercontent.com/neoclide/coc.nvim/master/doc/coc-example-config.vim
 
