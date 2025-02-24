@@ -12,3 +12,39 @@ disabled = true
 [git_status]
 style = "bold red"
 
+# Show Node.js version only when a project has package.json, node_modules, or .nvmrc
+[nodejs]
+detect_files = ["package.json", "node_modules", ".nvmrc"]
+detect_folders = ["node_modules"]
+format = "via [󰎙 $version](bold green) "
+
+# Show Python version when a virtual environment is active or pyproject.toml exists
+[python]
+detect_files = ["pyproject.toml", "requirements.txt", "Pipfile", "setup.py"]
+detect_folders = ["venv", ".venv"]
+format = "via [ $version](bold yellow) "
+
+# Show Go version when go.mod or go.work exists
+[golang]
+detect_files = ["go.mod", "go.work"]
+format = "via [󰟓 $version](bold cyan) "
+
+# Show Rust version only when Cargo.toml is present
+[rust]
+detect_files = ["Cargo.toml"]
+format = "via [ $version](bold red) "
+
+# Show Java version only when a pom.xml or build.gradle file exists
+[java]
+detect_files = ["pom.xml", "build.gradle", "build.gradle.kts"]
+format = "via [ $version](bold blue) "
+
+# Show PHP version when composer.json is present
+[php]
+detect_files = ["composer.json"]
+format = "via [ $version](bold purple) "
+
+# Show Ruby version when Gemfile is present
+[ruby]
+detect_files = ["Gemfile"]
+format = "via [ $version](bold magenta) "
