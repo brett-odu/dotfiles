@@ -16,14 +16,3 @@ autocmd("TextYankPost", {
         vim.highlight.on_yank({ timeout = 200 })
     end,
 })
-
--- Open NvimTree automatically when opening a directory
-autocmd("VimEnter", {
-    group = augroup("OpenNvimTree", { clear = true }),
-    callback = function()
-        if vim.fn.isdirectory(vim.fn.argv(0)) == 1 then
-            require("nvim-tree.api").tree.open()
-        end
-    end,
-})
-
