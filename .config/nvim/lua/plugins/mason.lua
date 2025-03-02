@@ -6,9 +6,18 @@ return {
         "jay-babu/mason-null-ls.nvim",
         "jose-elias-alvarez/null-ls.nvim",
     },
-    
+
     config = function()
-        require("mason").setup()
+        require("mason").setup({
+            ui = {
+                border = "rounded",
+                icons = {
+                    package_installed = "✓",
+                    package_pending = "➜",
+                    package_uninstalled = "✗",
+                },
+            },
+        })
 
         require("mason-lspconfig").setup({
             automatic_installation = true,
@@ -40,9 +49,9 @@ return {
         require("mason-tool-installer").setup({
             ensure_installed = {
                 "prettier",
-                "stylua", -- lua formatter
-                "isort", -- python formatter
-                "black", -- python formatter
+                "stylua",
+                "isort",
+                "black",
                 "pylint",
                 "eslint_d",
             },
@@ -50,27 +59,31 @@ return {
 
         require("mason-null-ls").setup({
             ensure_installed = {
-                "prettier",  -- JavaScript formatter
-                "stylua",    -- Lua formatter
-                "isort",     -- Python formatter
-                "black",     -- Python formatter
-                "pylint",    -- Python linter
-                "eslint_d",  -- JavaScript linter
+                "prettier",
+                "stylua",
+                "isort",
+                "black",
+                "pylint",
+                "eslint_d",
             },
             automatic_installation = true,
         })
-        
+
         local null_ls = require("null-ls")
-        
         null_ls.setup({
             sources = {
                 null_ls.builtins.formatting.prettier,
                 null_ls.builtins.formatting.stylua,
                 null_ls.builtins.formatting.black,
                 null_ls.builtins.formatting.isort,
-                -- null_ls.builtins.diagnostics.pylint,  -- Breaks lspconfig-pyright
                 null_ls.builtins.diagnostics.eslint_d,
             },
         })
+
+        -- Apply Tokyo Night Colors
+        vim.cmd("highlight MasonNormal guibg=#1a1b26 guifg=#c0caf5")
+        vim.cmd("highlight MasonHeader guibg=#bb9af7 guifg=#1a1b26")
+        vim.cmd("highlight MasonHighlight guifg=#ff9e64")
+        vim.cmd("highlight MasonMuted guifg=#565f89")
     end,
 }

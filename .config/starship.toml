@@ -1,50 +1,52 @@
 # Move the directory to the second line
-format = '$all$directory$character'
+format = '$all'
 
 # Don't print a new line at the start of the prompt
 add_newline = false
 
-# Disable the package module, hiding it from the prompt completely
-[package]
-disabled = true
-
-# Configure the git status module
-[git_status]
-style = "bold red"
+[username]
+show_always = true
 
 # Show Node.js version only when a project has package.json, node_modules, or .nvmrc
 [nodejs]
 detect_files = ["package.json", "node_modules", ".nvmrc"]
 detect_folders = ["node_modules"]
 format = "via [󰎙 $version](bold green) "
+style = "bg:#bb9af7 fg:#1a1b26"
 
 # Show Python version when a virtual environment is active or pyproject.toml exists
 [python]
 detect_files = ["pyproject.toml", "requirements.txt", "Pipfile", "setup.py"]
 detect_folders = ["venv", ".venv"]
-format = "via [ $version](bold yellow) "
+format = "via [ $version](bold green) "
+style = "bg:#bb9af7 fg:#1a1b26"
 
 # Show Go version when go.mod or go.work exists
 [golang]
 detect_files = ["go.mod", "go.work"]
 format = "via [󰟓 $version](bold cyan) "
+style = "bg:#bb9af7 fg:#1a1b26"
 
 # Show Rust version only when Cargo.toml is present
 [rust]
 detect_files = ["Cargo.toml"]
 format = "via [ $version](bold red) "
+style = "bg:#bb9af7 fg:#1a1b26"
 
 # Show Java version only when a pom.xml or build.gradle file exists
 [java]
 detect_files = ["pom.xml", "build.gradle", "build.gradle.kts"]
 format = "via [ $version](bold blue) "
+style = "bg:#bb9af7 fg:#1a1b26"
 
 # Show PHP version when composer.json is present
 [php]
 detect_files = ["composer.json"]
 format = "via [ $version](bold purple) "
+style = "bg:#bb9af7 fg:#1a1b26"
 
 # Show Ruby version when Gemfile is present
 [ruby]
 detect_files = ["Gemfile"]
 format = "via [ $version](bold magenta) "
+style = "bg:#bb9af7 fg:#1a1b26"

@@ -359,7 +359,15 @@ return {
             },
           },
         })
-  
+
+        -- Apply Tokyo Night Colors
+        vim.cmd("highlight NeoTreeNormal guibg=#1a1b26 guifg=#c0caf5")
+        vim.cmd("highlight NeoTreeNormalNC guibg=#1a1b26 guifg=#565f89")
+        vim.cmd("highlight NeoTreeWinSeparator guibg=#1a1b26 guifg=#3b4261")
+        vim.cmd("highlight NeoTreeGitModified guifg=#7aa2f7")
+        vim.cmd("highlight NeoTreeGitAdded guifg=#9ece6a")
+        vim.cmd("highlight NeoTreeGitDeleted guifg=#ff757f")
+
         vim.keymap.set("n", "<leader>e", "<Cmd>Neotree reveal<CR>")
       end,
     },

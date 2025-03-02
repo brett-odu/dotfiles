@@ -14,6 +14,25 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
+# Starship
+eval "$(starship init zsh)"
+
+# Tokyo Night colors for zsh-syntax-highlighting
+export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
+ZSH_HIGHLIGHT_STYLES[comment]='fg=#565f89'
+ZSH_HIGHLIGHT_STYLES[command]='fg=#7aa2f7'
+ZSH_HIGHLIGHT_STYLES[alias]='fg=#bb9af7'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=#ff9e64'
+ZSH_HIGHLIGHT_STYLES[function]='fg=#9ece6a'
+
+# Zoxide
+eval "$(zoxide init zsh)"
+
+# fzf
+# Set up fzf key bindings and fuzzy completion
+source <(fzf --zsh)
+export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
+
 # Neovim
 export PATH="$PATH:/opt/nvim-linux64/bin"
 # Use Neovim as "preferred editor"
@@ -62,3 +81,5 @@ eval "$(rbenv init -)"
 # autoload -U add-zsh-hook
 # add-zsh-hook chpwd auto_poetry_activate
 # auto_poetry_activate
+
+alias exit="tmux detach || exit"
