@@ -51,8 +51,7 @@ eval "$(pyenv init --path)"
 eval "$(pyenv init -)"
 
 # Golang
-PATH=$PATH:/usr/local/go/bin
-
+export PATH="$HOME/go/bin:$PATH"
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 # Bat
@@ -81,5 +80,3 @@ eval "$(rbenv init -)"
 # autoload -U add-zsh-hook
 # add-zsh-hook chpwd auto_poetry_activate
 # auto_poetry_activate
-
-alias exit="tmux detach || exit"

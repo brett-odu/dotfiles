@@ -18,53 +18,65 @@ return {
                 },
             },
         })
-
         require("mason-lspconfig").setup({
             automatic_installation = true,
             ensure_installed = {
                 "bashls",
                 "cssls",
-                "docker_compose_language_service",
                 "dockerls",
                 "eslint",
-                "golangci_lint_ls",
                 "gopls",
                 "helm_ls",
                 "html",
                 "jdtls",
-                "jinja_lsp",
                 "jsonls",
                 "lua_ls",
                 "marksman",
                 "pyright",
-                "rubocop",
                 "rust_analyzer",
-                "ts_ls",
+                "ts_ls", -- ✅ Updated from `tsserver`
                 "tailwindcss",
-                "vuels",
+                "volar",  -- ✅ Use Volar for Vue 3
                 "yamlls",
             },
         })
-
         require("mason-tool-installer").setup({
             ensure_installed = {
+                -- JavaScript / TypeScript
                 "prettier",
-                "stylua",
-                "isort",
-                "black",
-                "pylint",
                 "eslint_d",
+        
+                -- Python
+                "black",
+                "isort",
+                "pylint",
+        
+                -- Lua
+                "stylua",
+        
+                -- Go
+                "golangci-lint",
+        
+                -- Shell
+                "shfmt",
+                "shellcheck",
+        
+                -- Docker
+                "hadolint",
             },
         })
-
         require("mason-null-ls").setup({
             ensure_installed = {
                 "prettier",
+                "eslint_d",
                 "stylua",
                 "isort",
                 "black",
                 "pylint",
-                "eslint_d",
+                "golangci-lint",
+                "shfmt",
+                "shellcheck",
+                "hadolint",
             },
             automatic_installation = true,
         })
@@ -72,11 +84,18 @@ return {
         local null_ls = require("null-ls")
         null_ls.setup({
             sources = {
+                -- Formatting
                 null_ls.builtins.formatting.prettier,
                 null_ls.builtins.formatting.stylua,
                 null_ls.builtins.formatting.black,
                 null_ls.builtins.formatting.isort,
+                null_ls.builtins.formatting.shfmt,
+
+                -- Linting
                 null_ls.builtins.diagnostics.eslint_d,
+                null_ls.builtins.diagnostics.golangci_lint,
+                null_ls.builtins.diagnostics.shellcheck,
+                null_ls.builtins.diagnostics.hadolint,
             },
         })
 

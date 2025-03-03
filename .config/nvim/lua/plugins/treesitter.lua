@@ -3,7 +3,9 @@ return {
     event = { "BufReadPre", "BufNewFile" },
     build = ":TSUpdate",
     dependencies = {
-        "windwp/nvim-ts-autotag",
+        "windwp/nvim-ts-autotag",  -- Auto-close & rename HTML/JSX tags
+        "JoosepAlviste/nvim-ts-context-commentstring", -- Proper comments for embedded languages
+        "p00f/nvim-ts-rainbow", -- Rainbow brackets for nested expressions
     },
     config = function()
         local treesitter = require("nvim-treesitter.configs")
@@ -13,7 +15,7 @@ return {
                 enable = true,
                 additional_vim_regex_highlighting = false,
             },
-            indent = { enable = true },
+            indent = { enable = true }, -- Auto-indent code using Treesitter
             autotag = {
                 enable = true,
             },
@@ -35,7 +37,13 @@ return {
                 "c",
                 "rust",
                 "go",
+                "vue",
+                "python",
+                "toml",
+                "graphql",
+                "regex",
             },
+            auto_install = true, -- Automatically install missing parsers
             incremental_selection = {
                 enable = true,
                 keymaps = {
@@ -48,13 +56,13 @@ return {
             rainbow = {
                 enable = true,
                 disable = { "html" },
-                extended_mode = false,
-                max_file_lines = nil,
-            },
-            context_commentstring = {
-                enable = true,
-                enable_autocmd = false,
+                extended_mode = true, -- Also highlight operators and keywords
+                max_file_lines = 1000,
             },
         })
+        require("ts_context_commentstring").setup({
+            enable_autocmd = false,
+        })
+        vim.g.skip_ts_context_commentstring_module = true
     end,
 }

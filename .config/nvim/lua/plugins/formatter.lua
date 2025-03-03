@@ -6,6 +6,7 @@ return {
 
         conform.setup({
             formatters_by_ft = {
+                -- JavaScript / TypeScript
                 javascript = { "prettier" },
                 typescript = { "prettier" },
                 javascriptreact = { "prettier" },
@@ -15,8 +16,24 @@ return {
                 json = { "prettier" },
                 yaml = { "prettier" },
                 markdown = { "prettier" },
+
+                -- Lua
                 lua = { "stylua" },
+
+                -- Python
                 python = { "isort", "black" },
+
+                -- Go
+                go = { "gofmt" },
+
+                -- Shell
+                sh = { "shfmt" },
+
+                -- Vue
+                vue = { "prettier" },
+
+                -- Docker
+                dockerfile = { "hadolint" },
             },
             format_on_save = {
                 lsp_fallback = true,
