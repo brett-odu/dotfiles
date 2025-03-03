@@ -1,0 +1,19 @@
+[containers]
+ubuntu ansible_host=ansible_ubuntu
+fedora ansible_host=ansible_fedora
+debian ansible_host=ansible_debian
+
+# [vagrant]
+# vagrant_ubuntu ansible_host=192.168.56.101
+# vagrant_fedora ansible_host=192.168.56.102
+
+# [cloud]
+# aws_ubuntu ansible_host=3.121.45.67
+# gcp_debian ansible_host=35.192.88.12
+
+# [hardware]
+# home_server ansible_host=192.168.1.50
+# rpi ansible_host=192.168.1.100
+
+# [local]
+# localhost ansible_connection=local
