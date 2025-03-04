@@ -1,0 +1,30 @@
+- name: Clone dotfiles repository
+  git:
+    repo: "git@github.com:brett-odu/dotfiles.git"
+    dest: "{{ ansible_env.HOME }}/.dotfiles"
+    version: develop
+    accept_hostkey: yes
+  environment:
+    GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
+
+- name: Ensure .config directory exists
+  file:
+    path: "{{ ansible_env.HOME }}/.config"
+    state: directory
+    owner: ansible
+    group: ansible
+    mode: '0755'
+
+- name: Symlink dotfiles
+  file:
+    src: "{{ ansible_env.HOME }}/.dotfiles/.config/{{ item.src }}"
+    dest: "{{ ansible_env.HOME }}/{{ item.dest }}"
+    state: link
+    force: yes  # Ensure old files are replaced if necessary
+  loop:
+    - { src: "zsh/.zshrc", dest: ".zshrc" }
+    - { src: "tmux/", dest: ".config/tmux" }
+    - { src: "nvim/", dest: ".config/nvim" }
+    - { src: "wezterm/", dest: ".config/wezterm" }
+    - { src: "bat/", dest: ".config/bat" }
+    - { src: "starship.toml", dest: ".config/starship.toml" }

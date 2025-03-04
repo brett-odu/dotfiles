@@ -1,0 +1,42 @@
+    - name: Ensure SSH directory exists for ansible user
+      file:
+        path: "/home/ansible/.ssh"
+        state: directory
+        owner: ansible
+        group: ansible
+        mode: '0700'
+
+    - name: Copy SSH private key for ansible user
+      copy:
+        src: "~/.ssh/id_ed25519"
+        dest: "/home/ansible/.ssh/id_ed25519"
+        owner: ansible
+        group: ansible
+        mode: '0600'
+      when: ansible_connection not in ["docker", "local"]
+      ignore_errors: yes
+
+    - name: Copy SSH public key for ansible user
+      copy:
+        src: "~/.ssh/id_ed25519.pub"
+        dest: "/home/ansible/.ssh/id_ed25519.pub"
+        owner: ansible
+        group: ansible
+        mode: '0644'
+      when: ansible_connection not in ["docker", "local"]
+      ignore_errors: yes
+
+    - name: Copy SSH config into container
+      copy:
+        src: "~/.ssh/config"
+        dest: "/home/ansible/.ssh/config"
+        owner: ansible
+        group: ansible
+        mode: '0600'
+      when: ansible_connection not in ["docker", "local"]
+      ignore_errors: yes
+
+    - name: Ensure SSH known hosts include GitHub
+      shell: ssh-keyscan github.com >> /home/ansible/.ssh/known_hosts
+      args:
+        creates: "/home/ansible/.ssh/known_hosts"
