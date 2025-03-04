@@ -1,0 +1,5 @@
+- name: Remove passwordless sudo for dev_user
+  become: yes
+  file:
+    path: "/etc/sudoers.d/{{ dev_user }}"
+    state: absent

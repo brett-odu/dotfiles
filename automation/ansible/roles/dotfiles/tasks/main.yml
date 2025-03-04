@@ -7,18 +7,40 @@
   environment:
     GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
 
-- name: Ensure .config directory exists
+- name: Check if dotfiles have already been moved
+  become: yes
+  stat:
+    path: "/home/{{ dev_user }}/.dotfiles"
+  register: dotfiles_moved
+
+- name: Move dotfiles to dev_user home
+  become: yes
+  command: mv /home/ansible/.dotfiles /home/{{ dev_user }}/
+  when: not dotfiles_moved.stat.exists  # Only move if it hasn't already been moved
+
+- name: Change ownership of dotfiles to dev_user
+  become: yes
   file:
-    path: "{{ ansible_env.HOME }}/.config"
+    path: "/home/{{ dev_user }}/.dotfiles"
+    state: directory
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    recurse: yes
+
+- name: Ensure .config directory exists
+  become: yes
+  file:
+    path: "/home/{{ dev_user }}/.config"
     state: directory
     owner: ansible
     group: ansible
     mode: '0755'
 
 - name: Symlink dotfiles
+  become: yes
   file:
-    src: "{{ ansible_env.HOME }}/.dotfiles/.config/{{ item.src }}"
-    dest: "{{ ansible_env.HOME }}/{{ item.dest }}"
+    src: "/home/{{ dev_user }}/.dotfiles/.config/{{ item.src }}"
+    dest: "/home/{{ dev_user }}/{{ item.dest }}"
     state: link
     force: yes  # Ensure old files are replaced if necessary
   loop:

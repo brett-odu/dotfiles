@@ -4,3 +4,4 @@
     - ssh_setup
     - dotfiles
     - shell_setup
+    - system_cleanup

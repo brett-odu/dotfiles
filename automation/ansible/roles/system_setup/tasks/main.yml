@@ -13,6 +13,22 @@
     content: "ansible ALL=(ALL) NOPASSWD: ALL"
     mode: 0440
 
+- name: Create dev_user
+  become: yes
+  user:
+    name: "{{ dev_user }}"
+    groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
+    shell: /bin/bash
+    create_home: yes
+
+- name: Allow dev_user to run sudo
+  become: yes
+  copy:
+    dest: "/etc/sudoers.d/{{ dev_user }}"
+    content: "{{ dev_user }} ALL=(ALL) NOPASSWD: ALL"
+    mode: 0440
+
+
 - name: Install required packages (Debian-based)
   become: yes
   apt:
