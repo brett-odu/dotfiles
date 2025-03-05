@@ -1,0 +1,47 @@
+- name: Install required packages (Debian-based)
+  become: true
+  apt:
+    name:
+      - tmux
+      - zsh
+      - bat
+      - git
+    state: present
+  when: ansible_os_family == "Debian"
+
+- name: Install required packages (MacOS)
+  become: true
+  homebrew:
+    name:
+      - tmux
+      - zsh
+      - bat
+      - git
+    state: present
+  when: ansible_os_family == "Darwin"
+
+- name: Install required packages (Fedora-based)
+  become: true
+  dnf:
+    name:
+      - zsh
+      - tmux
+      - bat
+      - git
+    state: present
+  when: ansible_os_family == "RedHat"
+
+- name: Install OpenSSH server
+  become: true
+  package:
+    name: openssh-server
+    state: present
+  when: ansible_connection != "docker"
+
+- name: Enable and start SSH service
+  become: true
+  service:
+    name: ssh
+    state: started
+    enabled: true
+  when: ansible_connection != "docker"

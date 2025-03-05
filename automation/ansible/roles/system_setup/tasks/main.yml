@@ -1,81 +1,8 @@
-- name: Create ansible user
-  become: yes
-  user:
-    name: ansible
-    groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
-    shell: /bin/bash
-    create_home: yes
+- name: Create users
+  include_tasks: create_users.yml
 
-- name: Allow ansible user to run sudo
-  become: yes
-  copy:
-    dest: "/etc/sudoers.d/ansible"
-    content: "ansible ALL=(ALL) NOPASSWD: ALL"
-    mode: 0440
+- name: Install required packages
+  include_tasks: install_packages.yml
 
-- name: Create dev_user
-  become: yes
-  user:
-    name: "{{ dev_user }}"
-    groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
-    shell: /bin/bash
-    create_home: yes
-
-- name: Allow dev_user to run sudo
-  become: yes
-  copy:
-    dest: "/etc/sudoers.d/{{ dev_user }}"
-    content: "{{ dev_user }} ALL=(ALL) NOPASSWD: ALL"
-    mode: 0440
-
-
-- name: Install required packages (Debian-based)
-  become: yes
-  apt:
-    name:
-      - tmux
-      - zsh
-      - bat
-      - neovim
-      - git
-    state: present
-  when: ansible_os_family == "Debian"
-
-- name: Install required packages (MacOS)
-  become: yes
-  homebrew:
-    name:
-      - tmux
-      - zsh
-      - bat
-      - neovim
-      - git
-    state: present
-  when: ansible_os_family == "Darwin"
-
-- name: Install required packages (Fedora-based)
-  become: yes
-  dnf:
-    name:
-      - zsh
-      - tmux
-      - bat
-      - neovim
-      - git
-    state: present
-  when: ansible_os_family == "RedHat"
-
-- name: Install OpenSSH server
-  become: yes
-  package:
-    name: openssh-server
-    state: present
-  when: ansible_connection != "docker"
-
-- name: Enable and start SSH service
-  become: yes
-  service:
-    name: ssh
-    state: started
-    enabled: true
-  when: ansible_connection != "docker"
+- name: Install Neovim
+  include_tasks: install_neovim.yml
