@@ -1,35 +1,112 @@
 - name: Install required packages (Debian-based)
   become: true
-  apt:
-    name:
-      - tmux
-      - zsh
-      - bat
-      - git
-    state: present
+  block:
+    - name: Update apt cache (Debian/Ubuntu)
+      apt:
+        update_cache: yes
+      when: ansible_os_family == "Debian"
+
+    - name: Install dependencies (Debian-based)
+      apt:
+        name:
+          - curl
+          - wget
+          - git
+          - sudo
+          - unzip
+          - python3
+          - python3-pip
+          - python3-venv
+          - rustc  # TODO: Use rustup instead
+          - cargo  # TODO: Use rustup instead
+          - rbenv
+          - shellcheck
+          - shfmt
+          - openjdk-17-jdk
+          - jq
+          - yamllint
+          - ca-certificates
+          - apt-transport-https
+          - build-essential
+          - libssl-dev
+          - libreadline-dev
+          - zlib1g-dev
+          - autoconf
+          - bison
+          - libyaml-dev
+          - libreadline-dev
+          - libncurses5-dev
+          - libffi-dev
+          - libgdbm6
+          - libgdbm-dev
+        state: present
   when: ansible_os_family == "Debian"
+
+##################################
+
+- name: Install required packages (Fedora-based)
+  become: true
+  block:
+    - name: Update dnf cache (Fedora)
+      dnf:
+        update_cache: yes
+
+    - name: Install dependencies (Fedora-based)
+      dnf:
+        name:
+          - curl
+          - wget
+          - git
+          - sudo
+          - unzip
+          - util-linux
+          - python3
+          - python3-pip
+          - python3-virtualenv
+          - rustc  # TODO: Use rustup instead
+          - cargo  # TODO: Use rustup instead
+          - podman
+          - helm
+          - java-21-openjdk
+          - rbenv
+          - shellcheck
+          - shfmt
+          - jq
+          - yamllint
+          - gcc
+          - make
+          - bzip2
+          - autoconf
+          - bison
+          - libyaml-devel
+          - readline-devel
+          - zlib-devel
+          - libffi-devel
+          - gdbm-libs
+          - gdbm-devel
+        state: present
+  when: ansible_os_family == "RedHat"
+
+#################################
 
 - name: Install required packages (MacOS)
   become: true
   homebrew:
     name:
-      - tmux
-      - zsh
-      - bat
-      - git
+          - curl
+          - wget
+          - git
+          - python3
+          - shellcheck
+          - shfmt
+          - openjdk@17
+          - helm
+          - jq
+          - yamllint
     state: present
   when: ansible_os_family == "Darwin"
 
-- name: Install required packages (Fedora-based)
-  become: true
-  dnf:
-    name:
-      - zsh
-      - tmux
-      - bat
-      - git
-    state: present
-  when: ansible_os_family == "RedHat"
+##################################
 
 - name: Install OpenSSH server
   become: true
@@ -45,3 +122,475 @@
     state: started
     enabled: true
   when: ansible_connection != "docker"
+
+#################################
+
+- name: Install Node.js and npm Using NVM for Both Users
+  become: false
+  block:
+    - name: Check if NVM is already installed for ansible_user
+      stat:
+        path: "/home/{{ ansible_user }}/.nvm/nvm.sh"
+      register: nvm_installed
+
+    - name: Download and install NVM (if not installed)
+      become_user: "{{ ansible_user }}"
+      shell: |
+        curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
+      args:
+        executable: /bin/bash
+      when: not nvm_installed.stat.exists
+
+    - name: Ensure NVM is loaded in shell for ansible_user
+      ansible.builtin.blockinfile:
+        path: "/home/{{ ansible_user }}/.bashrc"
+        block: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+        state: present
+
+    - name: Install Node.js using NVM for ansible_user
+      become_user: "{{ ansible_user }}"
+      shell: |
+        . "/home/{{ ansible_user }}/.nvm/nvm.sh" && nvm install {{ node_version }}
+      args:
+        executable: /bin/bash
+
+    - name: Check if NVM exists for dev_user
+      become: true
+      stat:
+        path: "/home/{{ dev_user }}/.nvm/nvm.sh"
+      register: nvm_copied
+
+    - name: Copy NVM directory to dev_user (if missing)
+      become: true
+      command: cp -r /home/{{ ansible_user }}/.nvm /home/{{ dev_user }}/
+      when: not nvm_copied.stat.exists
+
+    - name: Change ownership of NVM for dev_user
+      become: true
+      file:
+        path: "/home/{{ dev_user }}/.nvm"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+
+    - name: Ensure NVM is loaded in shell for dev_user
+      become: true
+      ansible.builtin.blockinfile:
+        path: "/home/{{ dev_user }}/.bashrc"
+        block: |
+          export NVM_DIR="$HOME/.nvm"
+          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+        state: present
+
+################################
+
+- name: Set up Docker's APT repository
+  become: true
+  block:
+    - name: Update APT cache
+      become: true
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Create directory for apt keyrings
+      become: true
+      ansible.builtin.file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+
+    - name: Download Docker's official GPG key
+      ansible.builtin.get_url:
+        url: https://download.docker.com/linux/{{ ansible_distribution | lower }}/gpg
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+        validate_certs: true
+
+    - name: Get architecture dynamically
+      ansible.builtin.command:
+        cmd: dpkg --print-architecture
+      register: architecture_output
+
+    - name: Add Docker repository to sources
+      ansible.builtin.copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch={{ architecture_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ ansible_distribution | lower }} {{ 'bookworm' if ansible_distribution_release == 'trixie' else ansible_distribution_release }} stable
+        mode: '0644'
+
+    - name: Update APT cache after adding Docker repository
+      ansible.builtin.apt:
+        update_cache: yes
+
+    - name: Install Docker Packages
+      become: true
+      block:
+        - name: Install Docker packages
+          ansible.builtin.package: 
+            name: 
+              - docker-ce
+              - docker-ce-cli
+              - containerd.io
+              - docker-buildx-plugin
+              - docker-compose-plugin
+            state: present
+
+      rescue:
+        - name: Debug package installation failure
+          ansible.builtin.debug:
+            msg: "Failed to install Docker packages."
+
+    - name: Set up non-root user Docker management
+      become: true
+      block:
+        - name: Create the Docker group
+          ansible.builtin.group:
+            name: docker
+            state: present
+
+        - name: Add current user to the Docker group
+          ansible.builtin.user:
+            name: "{{ ansible_user }}"
+            groups: docker
+            append: yes
+
+        - name: Add dev_user to the Docker group
+          ansible.builtin.user:
+            name: "{{ dev_user }}"
+            groups: docker
+            append: yes
+
+        - name: Apply Docker group membership without reboot
+          ansible.builtin.shell: "newgrp docker"
+          become: false
+          register: docker_group_applied
+          changed_when: false
+
+        - name: Reboot the machine (only for VMs)
+          ansible.builtin.reboot:
+            msg: "Rebooting to apply Docker group membership changes."
+            reboot_timeout: 300
+          when: "'vagrant' in group_names or 'cloud' in group_names"
+
+
+      rescue:
+        - name: Debug Docker group setup failure
+          ansible.builtin.debug:
+            msg: "Failed to set up Docker group."
+
+    - name: Verify Docker commands without sudo
+      block:
+        - name: Run Docker version command as the current user
+          become: false
+          ansible.builtin.command:
+            cmd: docker --version
+          register: docker_version
+
+        - name: Print Docker version to verify access
+          ansible.builtin.debug:
+            msg: "Docker is working without sudo: {{ docker_version.stdout }}"
+
+      # rescue:
+      #   - name: Debug Docker command failure
+      #     ansible.builtin.debug:
+      #       msg: "Failed to run Docker commands without sudo. Ensure the user has re-logged into the session."
+
+    - name: Enable Docker and containerd to start on boot
+      become: true
+      block:
+        - name: Enable and start docker and containerd services
+          ansible.builtin.service:
+            name: "{{ item }}"
+            state: started
+            enabled: yes
+          loop:
+            - docker
+            - containerd
+      when: ansible_connection != "docker"
+
+      # rescue:
+      # - name: Debug docker/containerd service failure
+      #   ansible.builtin.debug:
+      #     msg: "Failed to enable or start the docker and containerd services."
+
+  when: ansible_os_family == "Debian"
+
+####################################
+
+- name: Install Helm on Debian & Ubuntu
+  become: true
+  block:
+    - name: Add Helm GPG key
+      shell: |
+        curl -fsSL https://baltocdn.com/helm/signing.asc | gpg --dearmor -o /usr/share/keyrings/helm.gpg
+      args:
+        creates: /usr/share/keyrings/helm.gpg
+
+    - name: Add Helm repository to apt sources
+      shell: |
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/helm.gpg] https://baltocdn.com/helm/stable/debian/ all main" | tee /etc/apt/sources.list.d/helm-stable-debian.list
+      args:
+        creates: /etc/apt/sources.list.d/helm-stable-debian.list
+
+    - name: Update apt cache after adding Helm repository
+      apt:
+        update_cache: yes
+
+    - name: Install Helm
+      apt:
+        name: helm
+        state: present
+  when: ansible_os_family == "Debian"
+
+########################################
+
+- name: Install TypeScript globally via npm
+  shell: |
+    . "{{ ansible_env.HOME }}/.nvm/nvm.sh" && npm install -g typescript
+  args:
+    executable: /bin/bash
+
+#######################################
+
+# - name: Install Rust using rustup
+#   block:
+#     - name: Install Rust for ansible_user
+#       shell: |
+#         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+#       args:
+#         creates: ~/.cargo/bin/rustc
+
+#     - name: Configure shell for Rust
+#       shell: |
+#         . "{{ ansible_env.HOME }}/.cargo/env"
+
+#     - name: Use latest stable Rust
+#       shell: |
+#         rustup default stable
+
+#     - name: Check if Rust exists for dev_user
+#       become: true
+#       stat:
+#         path: "/home/{{ dev_user }}/.cargo/bin/rustc"
+#       register: rustc_copied
+
+#     - name: Copy Rust directory to dev_user (if missing)
+#       become: true
+#       command: cp -r /home/{{ ansible_user }}/.cargo /home/{{ dev_user }}/
+#       when: not rustc_copied.stat.exists
+
+#     - name: Change ownership of Rust for dev_user
+#       become: true
+#       file:
+#         path: "/home/{{ dev_user }}/.cargo"
+#         state: directory
+#         owner: "{{ dev_user }}"
+#         group: "{{ dev_user }}"
+#         recurse: yes
+
+######################################
+
+- name: Install Go 1.24.1 from Official Tarball
+  become: true
+  block:
+    - name: Detect system architecture
+      ansible.builtin.command: uname -m
+      register: architecture_output
+      changed_when: false
+
+    - name: Set Go architecture variable
+      set_fact:
+        go_arch: >-
+          {%- if 'aarch64' in architecture_output.stdout or 'arm64' in architecture_output.stdout -%}
+            arm64
+          {%- else -%}
+            amd64
+          {%- endif -%}
+
+    - name: Download Go tarball
+      ansible.builtin.get_url:
+        url: "https://go.dev/dl/go1.24.1.linux-{{ go_arch }}.tar.gz"
+        dest: "/tmp/go1.24.1.linux-{{ go_arch }}.tar.gz"
+        mode: '0644'
+
+    - name: Remove existing Go installation
+      ansible.builtin.file:
+        path: "/usr/local/go"
+        state: absent
+
+    - name: Extract Go to /usr/local/
+      ansible.builtin.unarchive:
+        src: "/tmp/go1.24.1.linux-{{ go_arch }}.tar.gz"
+        dest: "/usr/local/"
+        remote_src: yes
+        extra_opts: [--strip-components=0]
+
+    - name: Add Go to system-wide PATH
+      ansible.builtin.lineinfile:
+        path: "/etc/profile.d/go.sh"
+        line: "export PATH=$PATH:/usr/local/go/bin"
+        state: present
+        create: yes
+        mode: '0644'
+
+    - name: Apply Go PATH immediately in this session  # TODO: add to script
+      shell: |
+        export PATH=$PATH:/usr/local/go/bin  
+        go version
+      args:
+        executable: /bin/bash
+      register: go_version
+      changed_when: false
+
+    - name: Print Go version to verify installation
+      ansible.builtin.debug:
+        msg: "Go installed successfully: {{ go_version.stdout }}"
+
+######################################
+
+- name: Install Go Modules for ansible_user and dev_user
+  block:
+    - name: Ensure Go module bin directory exists for both users
+      become: true
+      ansible.builtin.file:
+        path: "/home/{{ item }}/go/bin"
+        state: directory
+        mode: '0755'
+        owner: "{{ item }}"
+        group: "{{ item }}"
+      loop:
+        - "{{ ansible_user }}"
+        - "{{ dev_user }}"
+
+    - name: Install Go modules as ansible_user
+      become_user: "{{ ansible_user }}"
+      shell: |
+        export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
+        for module in {{ go_modules | join(" ") }}; do
+          go install $module@latest
+        done
+      args:
+        executable: /bin/bash
+
+    - name: Check if Go modules exist for dev_user
+      become: true
+      stat:
+        path: "/home/{{ dev_user }}/go/bin/gopls"
+      register: gopls_installed
+
+    - name: Copy Go binaries from ansible_user to dev_user (if missing)
+      become: true
+      shell: |
+        if [ ! -f /home/{{ dev_user }}/go/bin/gopls ]; then
+          cp -r /home/{{ ansible_user }}/go/bin/* /home/{{ dev_user }}/go/bin/
+        fi
+      args:
+        executable: /bin/bash
+      when: not gopls_installed.stat.exists
+
+    - name: Fix ownership of Go binaries for dev_user
+      become: true
+      ansible.builtin.file:
+        path: "/home/{{ dev_user }}/go"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+
+##################################
+
+- name: Install rbenv and ruby-build (Debian-based)
+  block:
+    - name: Clone rbenv repository
+      git:
+        repo: "https://github.com/rbenv/rbenv.git"
+        dest: "{{ ansible_env.HOME }}/.rbenv"
+        version: master
+        accept_hostkey: yes
+      environment:
+        GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
+
+    - name: Install ruby-build as rbenv plugin
+      git:
+        repo: "https://github.com/rbenv/ruby-build.git"
+        dest: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+        version: master
+        accept_hostkey: yes
+      environment:
+        GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
+
+    - name: Check if rbenv and ruby-build have already been copied
+      become: true
+      stat:
+        path: "/home/{{ dev_user }}/.rbenv"
+      register: rbenv_copied
+
+    - name: copy rbenv and ruby-build to dev_user home
+      become: true
+      command: cp -r /home/ansible/.rbenv /home/{{ dev_user }}/
+      when: not rbenv_copied.stat.exists
+
+    - name: Change ownership of rbenv and ruby-build in dev_user home
+      become: true
+      file:
+        path: "/home/{{ dev_user }}/.rbenv"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+  when: ansible_os_family == "Debian"
+
+# - name: Install rbenv and ruby-build (Fedora-based)
+#   block:
+#     - name: Install Ruby
+#       shell: |
+#         export PATH="$HOME/.rbenv/bin:$PATH"
+#         rbenv init
+
+#     # - name: Verify ruby-build installation
+#     #   command: "ruby-build --version"
+#     #   register: ruby_build_version
+#     #   changed_when: false
+
+#     # - name: Print installed ruby-build version
+#     #   debug:
+#     #     msg: "ruby-build installed successfully: {{ ruby_build_version.stdout }}"
+#   when: ansible_os_family == "RedHat"
+
+- name: Install Ruby version
+  block:
+    - name: Configure rbenv in shell profile
+      become: true
+      ansible.builtin.blockinfile:
+        path: "/home/{{ item }}/.bashrc"
+        block: |
+          export PATH="$HOME/.rbenv/bin:$PATH"
+          eval "$(rbenv init - bash)"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - RBENV"
+        state: present
+      loop:
+        - "{{ ansible_user }}"
+        - "{{ dev_user }}"
+
+    - name: Install Ruby using rbenv
+      shell: |
+        export PATH="$HOME/.rbenv/bin:$PATH"
+        eval "$(rbenv init - bash)"
+        rbenv install -s {{ ruby_version }}
+      args:
+        executable: /bin/bash
+
+    - name: Set installed Ruby version as global default
+      shell: |
+        export PATH="$HOME/.rbenv/bin:$PATH"
+        eval "$(rbenv init - bash)"
+        rbenv global {{ ruby_version }}
+      args:
+        executable: /bin/bash

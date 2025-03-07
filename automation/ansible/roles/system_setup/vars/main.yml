@@ -1,2 +1,13 @@
 neovim_min_version: "0.8.0"
 architecture: "{{ ansible_architecture }}"
+
+go_modules:
+  - golang.org/x/tools/gopls
+  - github.com/golangci/golangci-lint/cmd/golangci-lint
+  - github.com/segmentio/golines
+
+ruby_version: "3.1.2"
+
+node_version: "22"
+
+openjdk_version: "openjdk-21-jdk"

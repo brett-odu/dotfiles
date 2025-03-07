@@ -71,6 +71,10 @@ export NVM_DIR="$HOME/.nvm"
 export PATH="$HOME/.rbenv/bin:$PATH"
 eval "$(rbenv init -)"
 
+# OpenJDK
+'export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"'
+export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+
 #Automatically activate the virtual environment when you enter the project
 # function auto_poetry_activate() {
 #   if [[ -f "pyproject.toml" && -d ".venv" ]]; then
