@@ -4,41 +4,49 @@
     - name: Update apt cache (Debian/Ubuntu)
       apt:
         update_cache: yes
-      when: ansible_os_family == "Debian"
 
     - name: Install dependencies (Debian-based)
       apt:
         name:
+          # System Utilities
+          - apt-transport-https
+          - build-essential
+          - ca-certificates
           - curl
-          - wget
           - git
+          - make
           - sudo
           - unzip
+          - wget
+          - zsh
+
+          # Programming Languages & Package Managers
+          - cargo  # TODO: Use rustup instead
+          - openjdk-17-jdk
           - python3
           - python3-pip
           - python3-venv
-          - rustc  # TODO: Use rustup instead
-          - cargo  # TODO: Use rustup instead
           - rbenv
+          - rustc  # TODO: Use rustup instead
+
+          # Shell & Formatting Tools
+          - fzf
+          - jq
           - shellcheck
           - shfmt
-          - openjdk-17-jdk
-          - jq
           - yamllint
-          - ca-certificates
-          - apt-transport-https
-          - build-essential
-          - libssl-dev
-          - libreadline-dev
-          - zlib1g-dev
+
+          # Development Libraries
           - autoconf
           - bison
-          - libyaml-dev
-          - libreadline-dev
-          - libncurses5-dev
           - libffi-dev
-          - libgdbm6
           - libgdbm-dev
+          - libgdbm6
+          - libncurses5-dev
+          - libreadline-dev
+          - libssl-dev
+          - libyaml-dev
+          - zlib1g-dev
         state: present
   when: ansible_os_family == "Debian"
 
@@ -54,60 +62,73 @@
     - name: Install dependencies (Fedora-based)
       dnf:
         name:
+          # System Utilities
           - curl
-          - wget
           - git
+          - make
           - sudo
           - unzip
           - util-linux
+          - wget
+          - zsh
+
+          # Programming Languages & Package Managers
+          - cargo  # TODO: Use rustup instead
+          - java-21-openjdk
           - python3
           - python3-pip
           - python3-virtualenv
-          - rustc  # TODO: Use rustup instead
-          - cargo  # TODO: Use rustup instead
-          - podman
-          - helm
-          - java-21-openjdk
           - rbenv
+          - rustc  # TODO: Use rustup instead
+
+          # Container & Deployment Tools
+          - helm
+          - podman
+
+          # Shell & Formatting Tools
+          - fzf
+          - jq
           - shellcheck
           - shfmt
-          - jq
           - yamllint
-          - gcc
-          - make
-          - bzip2
+
+          # Development Tools & Libraries
           - autoconf
           - bison
+          - bzip2
+          - gcc
+          - gdbm-devel
+          - gdbm-libs
+          - libffi-devel
           - libyaml-devel
+          - make
           - readline-devel
           - zlib-devel
-          - libffi-devel
-          - gdbm-libs
-          - gdbm-devel
         state: present
   when: ansible_os_family == "RedHat"
 
-#################################
+##################################
 
 - name: Install required packages (MacOS)
   become: true
   homebrew:
     name:
-          - curl
-          - wget
-          - git
-          - python3
-          - shellcheck
-          - shfmt
-          - openjdk@17
-          - helm
-          - jq
-          - yamllint
+      - fzf
+      - curl
+      - wget
+      - pyenv
+      - git
+      - python3
+      - shellcheck
+      - shfmt
+      - openjdk@17
+      - helm
+      - jq
+      - yamllint
     state: present
   when: ansible_os_family == "Darwin"
 
 ##################################
-
 - name: Install OpenSSH server
   become: true
   package:
@@ -594,3 +615,49 @@
         rbenv global {{ ruby_version }}
       args:
         executable: /bin/bash
+
+################################
+
+- name: Set up Pyenv
+  become: true
+  block:
+    - name: Install Pyenv for ansible_user
+      become: false
+      shell: curl -fsSL https://pyenv.run | bash
+      args:
+        executable: /bin/bash
+        creates: "{{ ansible_env.HOME }}/.pyenv"
+      register: pyenv_installed
+
+    - name: Source shell configuration to apply Pyenv
+      become: false
+      shell: |
+        export PATH="$HOME/.pyenv/bin:$PATH"
+        eval "$(pyenv init --path)"
+        eval "$(pyenv virtualenv-init -)"
+      args:
+        executable: /bin/bash
+      when: pyenv_installed.changed
+
+    - name: Check if Pyenv exists for ansible_user
+      stat:
+        path: "{{ ansible_env.HOME }}/.pyenv"
+      register: pyenv_exists
+
+    - name: Check if Pyenv exists for dev_user
+      stat:
+        path: "/home/{{ dev_user }}/.pyenv"
+      register: pyenv_copied
+
+    - name: Copy Pyenv directory to dev_user (if missing)
+      command: cp -r "{{ ansible_env.HOME }}/.pyenv" "/home/{{ dev_user }}/"
+      when: pyenv_exists.stat.exists and not pyenv_copied.stat.exists
+
+    - name: Change ownership of Pyenv for dev_user
+      file:
+        path: "/home/{{ dev_user }}/.pyenv"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+      when: pyenv_exists.stat.exists

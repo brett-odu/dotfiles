@@ -1,6 +1,135 @@
-- name: Install oh-my-zsh
-  shell: |
-    rm -rf ~/.oh-my-zsh
-    sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-  args:
-    creates: ~/.oh-my-zsh
+- name: Set Zsh as the Default Shell for All Container OSs
+  become: yes
+  block:
+    - name: Verify Zsh installation
+      command: "zsh --version"
+      register: zsh_version
+      changed_when: false
+
+    - name: Ensure Zsh is in the authorized shells list (/etc/shells)
+      lineinfile:
+        path: /etc/shells
+        line: /bin/zsh
+        state: present
+
+    - name: Change default shell to Zsh (Ubuntu & Debian)
+      command: "chsh -s /bin/zsh {{ item }}"
+      loop:
+        - "{{ ansible_user }}"
+        - "{{ dev_user }}"
+      when: ansible_os_family == "Debian"
+
+    - name: Change default shell to Zsh (Fedora)
+      command: "chsh -s /bin/zsh {{ item }}"
+      loop:
+        - "{{ ansible_user }}"
+        - "{{ dev_user }}"
+      when: ansible_os_family == "RedHat"
+
+    - name: Verify default shell change
+      become: no  # Run as the user
+      shell: "echo $SHELL"
+      register: current_shell
+      changed_when: false
+
+###############################
+
+- name: Install shell tools
+  become: true
+  block:
+    - name: Install Starship
+      shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
+      args:
+        creates: "/usr/local/bin/starship"
+
+    - name: Install Zoxide
+      shell: curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+      args:
+        creates: "/usr/local/bin/zoxide"
+
+###############################
+
+# - name: Install oh-my-zsh
+#   shell: |
+#     rm -rf ~/.oh-my-zsh
+#     sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+#   args:
+#     creates: ~/.oh-my-zsh
+
+- name: Install and Configure Zsh with Local .zshrc
+  become: yes
+  block:
+    - name: Ensure Oh My Zsh is installed
+      become: no
+      shell: |
+        if [ ! -d "$HOME/.oh-my-zsh" ]; then
+          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        fi
+      args:
+        executable: /bin/bash
+
+    - name: Ensure Zsh plugin directory exists
+      file:
+        path: "/home/{{ ansible_user }}/.oh-my-zsh/custom/plugins"
+        state: directory
+        owner: "{{ ansible_user }}"
+        group: "{{ ansible_user }}"
+        mode: '0755'
+
+    - name: Install Zsh plugins
+      git:
+        repo: "{{ item.repo }}"
+        dest: "/home/{{ ansible_user }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+        version: master
+      loop:
+        - { name: "zsh-autosuggestions", repo: "https://github.com/zsh-users/zsh-autosuggestions.git" }
+        - { name: "zsh-syntax-highlighting", repo: "https://github.com/zsh-users/zsh-syntax-highlighting.git" }
+        - { name: "you-should-use", repo: "https://github.com/MichaelAquilina/zsh-you-should-use.git" }
+      loop_control:
+        loop_var: item
+
+    - name: Install Zsh plugins
+      git:
+        repo: "{{ item.repo }}"
+        dest: "/home/{{ ansible_user }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+        version: main
+      loop:
+        - { name: "zsh-navigation-tools", repo: "https://github.com/psprint/zsh-navigation-tools.git" }
+      loop_control:
+        loop_var: item
+
+    - name: Check if oh-my-zsh exists for dev_user
+      become: true
+      stat:
+        path: "/home/{{ dev_user }}/.oh-my-zsh"
+      register: oh_my_zsh_copied
+
+    - name: Copy oh-my-zsh directory to dev_user (if missing)
+      become: true
+      command: cp -r /home/{{ ansible_user }}/.oh-my-zsh /home/{{ dev_user }}/
+      when: not oh_my_zsh_copied.stat.exists
+
+    - name: Change ownership of oh-my-zsh for dev_user
+      become: true
+      file:
+        path: "/home/{{ dev_user }}/.oh-my-zsh"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+
+    - name: Copy local .zshrc to target machines
+      become: true
+      copy:
+        src: "{{ zshrc_path }}"
+        dest: "/home/{{ item }}/.zshrc"
+        owner: "{{ item }}"
+        group: "{{ item }}"
+        mode: '0644'
+        backup: yes  # Keeps a backup of any existing .zshrc
+      loop:
+        - "{{ ansible_user }}"
+        - "{{ dev_user }}"
+
+###############################
+

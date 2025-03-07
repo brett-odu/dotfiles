@@ -50,3 +50,12 @@
     - { src: "wezterm/", dest: ".config/wezterm" }
     - { src: "bat/", dest: ".config/bat" }
     - { src: "starship.toml", dest: ".config/starship.toml" }
+
+- name: Change ownership of ~/.config for dev_user
+  become: true
+  file:
+    path: "/home/{{ dev_user }}/.config"
+    state: directory
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    recurse: yes

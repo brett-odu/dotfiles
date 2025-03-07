@@ -14,9 +14,6 @@ plugins=(
 
 source $ZSH/oh-my-zsh.sh
 
-# Starship
-eval "$(starship init zsh)"
-
 # Tokyo Night colors for zsh-syntax-highlighting
 export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 ZSH_HIGHLIGHT_STYLES[comment]='fg=#565f89'
@@ -34,7 +31,7 @@ source <(fzf --zsh)
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
 
 # Neovim
-export PATH="$PATH:/opt/nvim-linux64/bin"
+# export PATH="$PATH:/opt/nvim-linux64/bin"
 # Use Neovim as "preferred editor"
 export VISUAL=nvim
 # Use Neovim instead of Vim or Vi
@@ -72,8 +69,8 @@ export PATH="$HOME/.rbenv/bin:$PATH"
 eval "$(rbenv init -)"
 
 # OpenJDK
-'export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"'
-export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
+# 'export PATH="/opt/homebrew/opt/openjdk/bin:$PATH"'
+# export CPPFLAGS="-I/opt/homebrew/opt/openjdk/include"
 
 #Automatically activate the virtual environment when you enter the project
 # function auto_poetry_activate() {
