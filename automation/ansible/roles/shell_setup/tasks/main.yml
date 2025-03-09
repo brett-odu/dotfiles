@@ -36,6 +36,7 @@
 ###############################
 
 - name: Install Starship
+  become: true
   shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
   args:
     creates: "/usr/local/bin/starship"
