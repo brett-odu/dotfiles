@@ -1,4 +1,4 @@
-- name: Set Zsh as the Default Shell for All Container OSs
+- name: Set Zsh as the Default Shell
   become: yes
   block:
     - name: Verify Zsh installation
@@ -31,6 +31,7 @@
       shell: "echo $SHELL"
       register: current_shell
       changed_when: false
+  tags: zsh_default
 
 ###############################
 

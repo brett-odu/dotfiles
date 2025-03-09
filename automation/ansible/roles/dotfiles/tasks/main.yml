@@ -1,61 +1,64 @@
-- name: Clone dotfiles repository
-  git:
-    repo: "git@github.com:brett-odu/dotfiles.git"
-    dest: "{{ ansible_env.HOME }}/.dotfiles"
-    version: develop
-    accept_hostkey: yes
-  environment:
-    GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
+- name: Get and Symlink dotfiles
+  block:
+    - name: Clone dotfiles repository
+      git:
+        repo: "git@github.com:brett-odu/dotfiles.git"
+        dest: "{{ ansible_env.HOME }}/.dotfiles"
+        version: develop
+        accept_hostkey: yes
+      environment:
+        GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
 
-- name: Check if dotfiles have already been moved
-  become: yes
-  stat:
-    path: "/home/{{ dev_user }}/.dotfiles"
-  register: dotfiles_moved
+    - name: Check if dotfiles have already been moved
+      become: yes
+      stat:
+        path: "/home/{{ dev_user }}/.dotfiles"
+      register: dotfiles_moved
 
-- name: Move dotfiles to dev_user home
-  become: yes
-  command: mv /home/ansible/.dotfiles /home/{{ dev_user }}/
-  when: not dotfiles_moved.stat.exists  # Only move if it hasn't already been moved
+    - name: Move dotfiles to dev_user home
+      become: yes
+      command: mv /home/ansible/.dotfiles /home/{{ dev_user }}/
+      when: not dotfiles_moved.stat.exists  # Only move if it hasn't already been moved
 
-- name: Change ownership of dotfiles to dev_user
-  become: yes
-  file:
-    path: "/home/{{ dev_user }}/.dotfiles"
-    state: directory
-    owner: "{{ dev_user }}"
-    group: "{{ dev_user }}"
-    recurse: yes
+    - name: Change ownership of dotfiles to dev_user
+      become: yes
+      file:
+        path: "/home/{{ dev_user }}/.dotfiles"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
 
-- name: Ensure .config directory exists
-  become: yes
-  file:
-    path: "/home/{{ dev_user }}/.config"
-    state: directory
-    owner: ansible
-    group: ansible
-    mode: '0755'
+    - name: Ensure .config directory exists
+      become: yes
+      file:
+        path: "/home/{{ dev_user }}/.config"
+        state: directory
+        owner: ansible
+        group: ansible
+        mode: '0755'
 
-- name: Symlink dotfiles
-  become: yes
-  file:
-    src: "/home/{{ dev_user }}/.dotfiles/.config/{{ item.src }}"
-    dest: "/home/{{ dev_user }}/{{ item.dest }}"
-    state: link
-    force: yes  # Ensure old files are replaced if necessary
-  loop:
-    - { src: "zsh/.zshrc", dest: ".zshrc" }
-    - { src: "tmux/", dest: ".config/tmux" }
-    - { src: "nvim/", dest: ".config/nvim" }
-    - { src: "wezterm/", dest: ".config/wezterm" }
-    - { src: "bat/", dest: ".config/bat" }
-    - { src: "starship.toml", dest: ".config/starship.toml" }
+    - name: Symlink dotfiles
+      become: yes
+      file:
+        src: "/home/{{ dev_user }}/.dotfiles/.config/{{ item.src }}"
+        dest: "/home/{{ dev_user }}/{{ item.dest }}"
+        state: link
+        force: yes  # Ensure old files are replaced if necessary
+      loop:
+        - { src: "zsh/.zshrc", dest: ".zshrc" }
+        - { src: "tmux/.tmux.conf", dest: ".tmux.conf" }
+        - { src: "nvim/", dest: ".config/nvim" }
+        - { src: "wezterm/", dest: ".config/wezterm" }
+        - { src: "bat/", dest: ".config/bat" }
+        - { src: "starship.toml", dest: ".config/starship.toml" }
 
-- name: Change ownership of ~/.config for dev_user
-  become: true
-  file:
-    path: "/home/{{ dev_user }}/.config"
-    state: directory
-    owner: "{{ dev_user }}"
-    group: "{{ dev_user }}"
-    recurse: yes
+    - name: Change ownership of ~/.config for dev_user
+      become: true
+      file:
+        path: "/home/{{ dev_user }}/.config"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+  tags: dotfiles

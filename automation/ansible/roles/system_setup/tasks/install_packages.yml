@@ -34,6 +34,7 @@
           - jq
           - shellcheck
           - shfmt
+          - tmux
           - yamllint
 
           # Development Libraries
@@ -47,8 +48,9 @@
           - libssl-dev
           - libyaml-dev
           - zlib1g-dev
-        state: present
+        state: latest
   when: ansible_os_family == "Debian"
+  tags: install_dependencies
 
 ##################################
 
@@ -74,7 +76,6 @@
 
           # Programming Languages & Package Managers
           - cargo  # TODO: Use rustup instead
-          - java-21-openjdk
           - python3
           - python3-pip
           - python3-virtualenv
@@ -90,6 +91,7 @@
           - jq
           - shellcheck
           - shfmt
+          - tmux
           - yamllint
 
           # Development Tools & Libraries
@@ -104,8 +106,9 @@
           - make
           - readline-devel
           - zlib-devel
-        state: present
+        state: latest
   when: ansible_os_family == "RedHat"
+  tags: install_dependencies
 
 ##################################
 
@@ -155,7 +158,6 @@
       register: nvm_installed
 
     - name: Download and install NVM (if not installed)
-      become_user: "{{ ansible_user }}"
       shell: |
         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.40.1/install.sh | bash
       args:
@@ -173,7 +175,6 @@
         state: present
 
     - name: Install Node.js using NVM for ansible_user
-      become_user: "{{ ansible_user }}"
       shell: |
         . "/home/{{ ansible_user }}/.nvm/nvm.sh" && nvm install {{ node_version }}
       args:
@@ -300,7 +301,6 @@
             reboot_timeout: 300
           when: "'vagrant' in group_names or 'cloud' in group_names"
 
-
       rescue:
         - name: Debug Docker group setup failure
           ansible.builtin.debug:
@@ -418,7 +418,7 @@
 
 ######################################
 
-- name: Install Go 1.24.1 from Official Tarball
+- name: Install {{ go_version }} from Official Tarball
   become: true
   block:
     - name: Detect system architecture
@@ -448,7 +448,7 @@
 
     - name: Extract Go to /usr/local/
       ansible.builtin.unarchive:
-        src: "/tmp/go1.24.1.linux-{{ go_arch }}.tar.gz"
+        src: "/tmp/{{ go_version }}.linux-{{ go_arch }}.tar.gz"
         dest: "/usr/local/"
         remote_src: yes
         extra_opts: [--strip-components=0]
@@ -491,7 +491,6 @@
         - "{{ dev_user }}"
 
     - name: Install Go modules as ansible_user
-      become_user: "{{ ansible_user }}"
       shell: |
         export PATH=$PATH:/usr/local/go/bin:$HOME/go/bin
         for module in {{ go_modules | join(" ") }}; do
@@ -634,7 +633,7 @@
       shell: |
         export PATH="$HOME/.pyenv/bin:$PATH"
         eval "$(pyenv init --path)"
-        eval "$(pyenv virtualenv-init -)"
+        eval "$(pyenv init -)"
       args:
         executable: /bin/bash
       when: pyenv_installed.changed

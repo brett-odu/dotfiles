@@ -26,6 +26,7 @@ ZSH_HIGHLIGHT_STYLES[function]='fg=#9ece6a'
 eval "$(zoxide init zsh)"
 
 # fzf
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 # Set up fzf key bindings and fuzzy completion
 source <(fzf --zsh)
 export FZF_DEFAULT_OPTS="--height 40% --layout=reverse --border"
@@ -49,7 +50,8 @@ eval "$(pyenv init -)"
 
 # Golang
 export PATH="$HOME/go/bin:$PATH"
-[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# Golang (only for linux installs)
+export PATH="/usr/local/go/bin:$PATH"
 
 # Bat
 alias cat=bat

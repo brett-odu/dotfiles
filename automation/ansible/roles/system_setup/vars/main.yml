@@ -10,6 +10,6 @@ ruby_version: "3.1.2"
 
 node_version: "22"
 
-openjdk_version: "openjdk-21-jdk"
+go_version: "go1.24.1"
 
 zshrc_path: "~/.zshrc"
