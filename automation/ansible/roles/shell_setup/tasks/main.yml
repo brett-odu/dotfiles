@@ -35,19 +35,20 @@
 
 ###############################
 
-- name: Install shell tools
+- name: Install Starship
+  shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
+  args:
+    creates: "/usr/local/bin/starship"
+
+- name: Install Zoxide
   become: true
-  block:
-    - name: Install Starship
-      shell: curl -sS https://starship.rs/install.sh | sh -s -- -y
-      args:
-        creates: "/usr/local/bin/starship"
-
-    - name: Install Zoxide
-      shell: curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
-      args:
-        creates: "/usr/local/bin/zoxide"
-
+  shell: |
+    curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+    mv ~/.local/bin/zoxide /usr/local/bin/zoxide
+  args:
+    executable: /bin/bash
+    creates: "/usr/local/bin/zoxide"
+        
 ###############################
 
 # - name: Install oh-my-zsh
