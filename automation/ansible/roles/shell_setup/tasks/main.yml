@@ -136,3 +136,43 @@
 
 ###############################
 
+- name: Install Nerd Fonts System-Wide
+  become: true
+  block:
+    - name: Install font dependencies (Debian-based)
+      apt:
+        name:
+          - fonts-powerline
+          - fonts-firacode
+          - fontconfig
+        state: present
+      when: ansible_os_family == "Debian"
+
+    - name: Install font dependencies (Fedora-based)
+      dnf:
+        name:
+          - powerline-fonts
+          - fira-code-fonts
+          - fontconfig
+        state: present
+      when: ansible_os_family == "RedHat"
+
+    - name: Create fonts directory
+      file:
+        path: "/usr/local/share/fonts"
+        state: directory
+        mode: '0755'
+
+    - name: Download Nerd Fonts (JetBrainsMono)
+      get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+        dest: "/usr/local/share/fonts/JetBrainsMono.zip"
+
+    - name: Extract Nerd Fonts
+      unarchive:
+        src: "/usr/local/share/fonts/JetBrainsMono.zip"
+        dest: "/usr/local/share/fonts/"
+        remote_src: yes
+
+    - name: Rebuild font cache
+      command: fc-cache -fv
