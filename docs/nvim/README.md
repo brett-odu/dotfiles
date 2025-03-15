@@ -26,7 +26,7 @@ nvim/
 For detailed information on each section, refer to the corresponding `.md` file.
 
 ## Plugins
-The plugins used in this configuration are documented separately. Navigate to the [Plugins README](plugins/README.md) for a detailed breakdown.
+The plugins used in this configuration are documented separately. Navigate to the [Plugins README](./plugins/README.md) for a detailed breakdown.
 
 ---
 
