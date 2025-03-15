@@ -11,6 +11,8 @@ fedora ansible_host=ansible_fedora
 vmware_ubuntu22 ansible_host=192.168.154.129
 vmware_debian12 ansible_host=192.168.154.132
 
+[utm]
+utm_centos10stream ansible_host=192.168.65.2
 
 # [vagrant]
 # vagrant_ubuntu ansible_host=192.168.56.101
@@ -24,5 +26,5 @@ vmware_debian12 ansible_host=192.168.154.132
 # home_server ansible_host=192.168.1.50
 # rpi ansible_host=192.168.1.100
 
-# [local]
-# localhost ansible_connection=local
+[local]
+localhost ansible_connection=local
