@@ -1,7 +1,16 @@
 [containers]
+debian ansible_host=ansible_debian
 ubuntu ansible_host=ansible_ubuntu
 fedora ansible_host=ansible_fedora
-debian ansible_host=ansible_debian
+# centos ansible_host=ansible_centos
+# rocky ansible_host=ansible_rocky
+# kali ansible_host=ansible_kali
+# alma ansible_alma=ansible_alma
+
+[vmware]
+vmware_ubuntu22 ansible_host=192.168.154.129
+vmware_debian12 ansible_host=192.168.154.132
+
 
 # [vagrant]
 # vagrant_ubuntu ansible_host=192.168.56.101

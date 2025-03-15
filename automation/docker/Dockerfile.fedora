@@ -1,14 +1,14 @@
 FROM fedora:39
 
 # Install required dependencies
-RUN dnf install -y sudo python3 python3-pip ansible
+RUN dnf install -y sudo python3 python3-pip
 
-# Create ansible user with sudo privileges (Fedora uses 'wheel' instead of 'sudo')
+# Create ansible user with sudo privileges
 RUN useradd -m ansible && \
     echo 'ansible ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ansible
 
-# Fix Ansible temporary directory permissions
-RUN mkdir -p /tmp/.ansible/tmp && chmod -R 777 /tmp/.ansible
+# # Fix Ansible temporary directory permissions
+# RUN mkdir -p /tmp/.ansible/tmp && chmod -R 777 /tmp/.ansible
 
 USER ansible
 WORKDIR /home/ansible

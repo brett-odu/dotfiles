@@ -296,12 +296,12 @@
           become: false
           register: docker_group_applied
           changed_when: false
+          when: "'containers' in group_names"
 
         - name: Reboot the machine (only for VMs)
           ansible.builtin.reboot:
             msg: "Rebooting to apply Docker group membership changes."
             reboot_timeout: 300
-          when: "'vagrant' in group_names or 'cloud' in group_names"
 
       rescue:
         - name: Debug Docker group setup failure

@@ -1,4 +1,15 @@
 services:
+
+  debian:
+    build:
+      context: .
+      dockerfile: Dockerfile.debian
+    container_name: ansible_debian
+    restart: always
+    tty: true
+    volumes:
+      - ~/.ssh:/home/ansible/.ssh:ro
+      - ~/.ssh/config:/home/ansible/.ssh/config:ro
   ubuntu:
     build:
       context: .
@@ -21,13 +32,46 @@ services:
       - ~/.ssh:/home/ansible/.ssh:ro
       - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
-  debian:
-    build:
-      context: .
-      dockerfile: Dockerfile.debian
-    container_name: ansible_debian
-    restart: always
-    tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
+  # centos:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.centos
+  #   container_name: ansible_centos
+  #   restart: always
+  #   tty: true
+  #   volumes:
+  #     - ~/.ssh:/home/ansible/.ssh:ro
+  #     - ~/.ssh/config:/home/ansible/.ssh/config:ro
+
+  # rocky:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.rocky
+  #   container_name: ansible_rocky
+  #   restart: always
+  #   tty: true
+  #   volumes:
+  #     - ~/.ssh:/home/ansible/.ssh:ro
+  #     - ~/.ssh/config:/home/ansible/.ssh/config:ro
+
+  # kali:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.kali
+  #   container_name: ansible_kali
+  #   restart: always
+  #   tty: true
+  #   volumes:
+  #     - ~/.ssh:/home/ansible/.ssh:ro
+  #     - ~/.ssh/config:/home/ansible/.ssh/config:ro
+
+  # alma:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile.alma
+  #   container_name: ansible_alma
+  #   restart: always
+  #   tty: true
+  #   volumes:
+  #     - ~/.ssh:/home/ansible/.ssh:ro
+  #     - ~/.ssh/config:/home/ansible/.ssh/config:ro

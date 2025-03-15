@@ -1,15 +1,16 @@
-export PATH="$HOME/.local/bin:$PATH"
+# Prevents multiple additions
+[[ ":$PATH:" != *":$HOME/.local/bin:"* ]] && export PATH="$HOME/.local/bin:$PATH"
 
-# Path to your oh-my-zsh installation.
+# Path to oh-my-zsh installation.
 export ZSH="$HOME/.oh-my-zsh"
 
 plugins=(
     git
     zsh-autosuggestions
-    zsh-syntax-highlighting
-    zsh-navigation-tools
     you-should-use
     poetry
+    zsh-navigation-tools
+    zsh-syntax-highlighting # After zsh-autosuggestions to avoid conflict
 )
 
 source $ZSH/oh-my-zsh.sh
@@ -19,7 +20,9 @@ export ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets)
 ZSH_HIGHLIGHT_STYLES[comment]='fg=#565f89'
 ZSH_HIGHLIGHT_STYLES[command]='fg=#7aa2f7'
 ZSH_HIGHLIGHT_STYLES[alias]='fg=#bb9af7'
-ZSH_HIGHLIGHT_STYLES[builtin]='fg=#ff9e64'
+ZSH_HIGHLIGHT_STYLES[path]='fg=#9ece6a'
+ZSH_HIGHLIGHT_STYLES[builtin]='fg=#e0af68'
+# ZSH_HIGHLIGHT_STYLES[builtin]='fg=#ff9e64'
 ZSH_HIGHLIGHT_STYLES[function]='fg=#9ece6a'
 
 # Zoxide
