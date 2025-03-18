@@ -1,3 +1,13 @@
+- name: Ensure dev_user owns all files in their home directory
+  become: true
+  file:
+    path: "/home/{{ dev_user }}"
+    state: directory
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+    mode: "0755"
+    recurse: yes
+
 - name: Remove passwordless sudo for dev_user
   become: yes
   file:

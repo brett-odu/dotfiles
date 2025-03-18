@@ -12,7 +12,7 @@ vmware_ubuntu22 ansible_host=192.168.154.129
 vmware_debian12 ansible_host=192.168.154.132
 
 [utm]
-utm_centos10stream ansible_host=192.168.65.2
+utm_rhel9 ansible_host=192.168.66.6
 
 # [vagrant]
 # vagrant_ubuntu ansible_host=192.168.56.101

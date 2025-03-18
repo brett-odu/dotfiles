@@ -20,10 +20,10 @@ Tmux uses `C-a` (Ctrl + a) as the prefix key, customized as follows:
 - `C-a C-l` → Switch to the next window
 - `C-a |` → Split window **horizontally** and stay in the same directory
 - `C-a -` → Split window **vertically** and stay in the same directory
-- `C-a M-h` → Resize pane **left** by 20
-- `C-a M-l` → Resize pane **right** by 20
-- `C-a M-k` → Resize pane **up** by 7
-- `C-a M-j` → Resize pane **down** by 7
+- `C-a M-H` → Resize pane **left** by 20
+- `C-a M-L` → Resize pane **right** by 20
+- `C-a M-K` → Resize pane **up** by 7
+- `C-a M-J` → Resize pane **down** by 7
 - `C-a C-k` → Clear the terminal screen
 - `C-a C-o` → Open a floating window with `zoxide` for quick project navigation
 - `C-a C-f` → Open a floating window with `fzf` for file selection

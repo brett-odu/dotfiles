@@ -1,3 +1,12 @@
+- name: Determine User Shell
+  shell: echo $SHELL
+  register: user_shell
+  changed_when: false
+
+- name: Set shell configuration file based on user shell
+  set_fact:
+    shell_config: "{{ '/home/' + ansible_user + '/.bashrc' if '/bash' in user_shell.stdout else '/home/' + ansible_user + '/.zshrc' }}"
+
 - name: Install required packages (Debian-based)
   become: true
   block:
@@ -15,6 +24,7 @@
           - ca-certificates
           - curl
           - git
+          - gnupg2
           - make
           - sudo
           - unzip
@@ -23,11 +33,10 @@
 
           # Programming Languages & Package Managers
           - cargo  # TODO: Use rustup instead
-          - openjdk-17-jdk
           - python3
           - python3-pip
           - python3-venv
-          - rbenv
+          # - rbenv
           - rustc  # TODO: Use rustup instead
 
           # Shell & Formatting Tools
@@ -58,9 +67,42 @@
 - name: Install required packages (Fedora-based)
   become: true
   block:
+    - name: Enable CRB repository (RHEL 9)
+      command: subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
+
+    - name: Enable CRB repository
+      command: dnf config-manager --set-enabled crb
+      when: ansible_distribution in ["CentOS", "AlmaLinux", "Rocky"]
+
+    - name: Import EPEL GPG Key (RHEL 9)
+      become: true
+      rpm_key:
+        state: present
+        key: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9"
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
+
+    - name: Enable EPEL repository (RHEL 9)
+      become: true
+      dnf:
+        name: 
+          - "https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
+        state: present
+        disable_gpg_check: no
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
+
+    - name: Enable EPEL repository
+      dnf:
+        name: 
+          - epel-release
+          - epel-next-release
+        state: present
+      when: ansible_distribution in ["CentOS", "AlmaLinux", "Rocky"]
+
     - name: Update dnf cache (Fedora)
       dnf:
         update_cache: yes
+      when: ansible_os_family == "RedHat"
 
     - name: Install dependencies (Fedora-based)
       dnf:
@@ -81,73 +123,123 @@
           - python3
           - python3-pip
           - python3-virtualenv
-          - rbenv
           - rustc  # TODO: Use rustup instead
 
           # Container & Deployment Tools
-          - helm
           - podman
 
           # Shell & Formatting Tools
           - fzf
           - jq
-          - shellcheck
-          - shfmt
           - tmux
-          - yamllint
 
           # Development Tools & Libraries
           - autoconf
           - bison
           - bzip2
+          - bzip2-devel
           - gcc
+          - gcc-c++
           - gdbm-devel
           - gdbm-libs
           - libffi-devel
           - libyaml-devel
           - make
+          - ncurses-devel
+          - openssl-devel
+          - patch
           - readline-devel
+          - sqlite
+          - sqlite-devel
+          - tk-devel
+          - xz-devel
           - zlib-devel
         state: present
-  when: ansible_os_family == "RedHat"
+      when: ansible_os_family == "RedHat"
+
+    - name: Install Fedora-specific dependencies
+      dnf:
+        name:
+          - helm
+          # - rbenv
+          - shellcheck
+          - shfmt
+          - yamllint
+      when: ansible_distribution == "Fedora"
+
+    # TODO: Install Helm, rbenv, shellckeck, shfmt, and yamllint
+      # when: ansible_distribution in ["CentOS", "RedHat", "AlmaLinux", "Rocky"]
   tags: install_dependencies
 
 ##################################
 
-- name: Install required packages (MacOS)
-  become: true
+- name: Install dependencies (macOS - Homebrew)
   homebrew:
     name:
-      - fzf
+      # 🛠️ System Utilities
+      - bat
+      - coreutils
       - curl
-      - wget
-      - pyenv
       - git
-      - python3
+      # - gnu-sed
+      # - gnu-tar
+      # - gnu-time
+      # - gnu-which
+      # - gnu-indent
+      # - gawk
+      - make
+      - openssh
+      - unzip
+      - wget
+      - zsh
+
+      # 🖥️ Programming Languages & Package Managers
+      # - python@3.11  # Install specific Python version
+      # - pipx
+      - rbenv
+      - rustup  # ✅ Use rustup instead of rustc/cargo
+
+      # 🐚 Shell & Formatting Tools
+      - fzf
+      - jq
       - shellcheck
       - shfmt
-      - openjdk@17
-      - helm
-      - jq
+      - tmux
       - yamllint
+
+      # 📚 Development Libraries
+      - autoconf
+      - bison
+      - libffi
+      - gdbm
+      - ncurses
+      - readline
+      - openssl@3
+      - libyaml
+      - zlib
     state: present
   when: ansible_os_family == "Darwin"
 
 ##################################
-- name: Install OpenSSH server
-  become: true
-  package:
-    name: openssh-server
-    state: present
-  when: ansible_connection != "docker"
 
-- name: Enable and start SSH service
+- name: Setup OpenSSH (Linux)
   become: true
-  service:
-    name: ssh
-    state: started
-    enabled: true
-  when: ansible_connection != "docker"
+  block:
+    - name: Install OpenSSH server
+      become: true
+      package:
+        name: openssh-server
+        state: present
+      when: ansible_connection != "docker"
+
+    - name: Enable and start SSH service
+      become: true
+      service:
+        name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
+        state: started
+        enabled: true
+      when: ansible_connection != "docker"
+  when: ansible_os_family != "Darwin"
 
 #################################
 
@@ -167,13 +259,15 @@
       when: not nvm_installed.stat.exists
 
     - name: Ensure NVM is loaded in shell for ansible_user
-      ansible.builtin.blockinfile:
-        path: "/home/{{ ansible_user }}/.bashrc"
+      become: true
+      blockinfile:
+        path: "{{ shell_config }}"
         block: |
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
         marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+        create: yes
         state: present
 
     - name: Install Node.js using NVM for ansible_user
@@ -205,12 +299,13 @@
     - name: Ensure NVM is loaded in shell for dev_user
       become: true
       ansible.builtin.blockinfile:
-        path: "/home/{{ dev_user }}/.bashrc"
+        path: "{{ shell_config }}"
         block: |
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
         marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+        create: yes
         state: present
 
 ################################
@@ -302,6 +397,7 @@
           ansible.builtin.reboot:
             msg: "Rebooting to apply Docker group membership changes."
             reboot_timeout: 300
+          when: "'containers' not in group_names"
 
       rescue:
         - name: Debug Docker group setup failure
@@ -371,6 +467,76 @@
         name: helm
         state: present
   when: ansible_os_family == "Debian"
+
+########################################
+
+- name: Install Helm, rbenv, shellcheck, shfmt, and yamllint (RHEL-based)
+  become: true
+  block:
+
+    - name: Download Helm installation script
+      get_url:
+        url: "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3"
+        dest: "/tmp/get_helm.sh"
+        mode: "0700"
+
+    - name: Run Helm installation script
+      command: /tmp/get_helm.sh
+      args:
+        creates: /usr/local/bin/helm
+
+    # - name: Verify Helm installation
+    #   command: helm version
+    #   register: helm_version_output
+    #   changed_when: false
+    #   ignore_errors: true
+
+    # - name: Debug Helm installation output
+    #   debug:
+    #     var: helm_version_output.stdout_lines
+
+    # - name: Install rbenv manually (RHEL-based)
+    #   git:
+    #     repo: "https://github.com/rbenv/rbenv.git"
+    #     dest: "/usr/local/rbenv"
+    #     version: master
+    #   environment:
+    #     GIT_SSL_NO_VERIFY: "true"
+
+    # - name: Install rbenv plugins
+    #   git:
+    #     repo: "https://github.com/rbenv/ruby-build.git"
+    #     dest: "/usr/local/rbenv/plugins/ruby-build"
+    #     version: master
+    #   environment:
+    #     GIT_SSL_NO_VERIFY: "true"
+
+    # - name: Add rbenv to profile
+    #   lineinfile:
+    #     path: "/etc/profile.d/rbenv.sh"
+    #     line: 'export PATH="/usr/local/rbenv/bin:$PATH" && eval "$(rbenv init -)"'
+    #     create: yes
+
+    - name: Install shellcheck from EPEL
+      dnf:
+        name: shellcheck
+        state: present
+      ignore_errors: yes  # Some RHEL versions don’t include it in EPEL
+
+    # - name: Install shfmt manually
+    #   get_url:
+    #     url: "https://github.com/mvdan/sh/releases/latest/download/shfmt_linux_amd64"
+    #     dest: "/usr/local/bin/shfmt"
+    #     mode: '0755'
+
+    - name: Install yamllint via pip
+      pip:
+        name: yamllint
+        state: present
+      environment:
+        PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+
+  when: ansible_distribution in ["CentOS", "RedHat", "AlmaLinux", "Rocky"]
 
 ########################################
 
@@ -528,16 +694,51 @@
 
 ##################################
 
-- name: Install rbenv and ruby-build (Debian-based)
+- name: Install rbenv and ruby-build
   block:
+    - name: Check if rbenv directory exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.rbenv"
+      register: rbenv_dir
+
+    - name: Check if rbenv is a Git repository
+      stat:
+        path: "{{ ansible_env.HOME }}/.rbenv/.git"
+      register: rbenv_git
+      when: rbenv_dir.stat.exists
+
+    - name: Remove existing non-git rbenv directory
+      file:
+        path: "{{ ansible_env.HOME }}/.rbenv"
+        state: absent
+      when: rbenv_dir.stat.exists and not rbenv_git.stat.exists
+
     - name: Clone rbenv repository
       git:
         repo: "https://github.com/rbenv/rbenv.git"
         dest: "{{ ansible_env.HOME }}/.rbenv"
         version: master
         accept_hostkey: yes
+        force: no
       environment:
         GIT_SSH_COMMAND: "ssh -F /home/ansible/.ssh/config -o StrictHostKeyChecking=no"
+
+    - name: Check if rbenv-build directory exists
+      stat:
+        path: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+      register: rbenv_build_dir
+
+    - name: Check if rbenv-build is a Git repository
+      stat:
+        path: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build/.git"
+      register: rbenv_build_git
+      when: rbenv_build_dir.stat.exists
+
+    - name: Remove existing non-git rbenv-build directory
+      file:
+        path: "{{ ansible_env.HOME }}/.rbenv/plugins/ruby-build"
+        state: absent
+      when: rbenv_build_dir.stat.exists and not rbenv_build_git.stat.exists
 
     - name: Install ruby-build as rbenv plugin
       git:
@@ -567,31 +768,15 @@
         owner: "{{ dev_user }}"
         group: "{{ dev_user }}"
         recurse: yes
-  when: ansible_os_family == "Debian"
+  # when: ansible_os_family == "Debian"
 
-# - name: Install rbenv and ruby-build (Fedora-based)
-#   block:
-#     - name: Install Ruby
-#       shell: |
-#         export PATH="$HOME/.rbenv/bin:$PATH"
-#         rbenv init
-
-#     # - name: Verify ruby-build installation
-#     #   command: "ruby-build --version"
-#     #   register: ruby_build_version
-#     #   changed_when: false
-
-#     # - name: Print installed ruby-build version
-#     #   debug:
-#     #     msg: "ruby-build installed successfully: {{ ruby_build_version.stdout }}"
-#   when: ansible_os_family == "RedHat"
 
 - name: Install Ruby version
   block:
     - name: Configure rbenv in shell profile
       become: true
       ansible.builtin.blockinfile:
-        path: "/home/{{ item }}/.bashrc"
+        path: "{{ shell_config }}"
         block: |
           export PATH="$HOME/.rbenv/bin:$PATH"
           eval "$(rbenv init - bash)"
