@@ -1,8 +1,43 @@
 - name: Enable EPEL on RHEL-like distros
-  ansible.builtin.yum:
-    name: epel-release
-    state: present
-  when: ansible_os_family == "RedHat"
+  become: true
+  block:
+
+    - name: Enable CodeReady Builder repo (RHEL 9)
+      ansible.builtin.command: subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
+      changed_when: false
+
+    - name: Import EPEL GPG key (RHEL 9)
+      ansible.builtin.rpm_key:
+        state: present
+        key: "https://dl.fedoraproject.org/pub/epel/RPM-GPG-KEY-EPEL-9"
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
+
+    - name: Install EPEL release RPM (RHEL 9)
+      ansible.builtin.dnf:
+        name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
+        state: present
+        disable_gpg_check: no
+      when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
+
+    - name: Enable CRB for CentOS-like distros
+      ansible.builtin.command: dnf config-manager --set-enabled crb
+      when: ansible_distribution in ["CentOS", "AlmaLinux", "Rocky"]
+      changed_when: false
+
+    - name: Install EPEL repos (CentOS-like)
+      ansible.builtin.dnf:
+        name:
+          - epel-release
+          - epel-next-release
+        state: present
+      when: ansible_distribution in ["CentOS", "AlmaLinux", "Rocky"]
+
+    - name: Update DNF cache (RedHat family)
+      ansible.builtin.dnf:
+        update_cache: yes
+      when: ansible_os_family == "RedHat"
+
   tags:
     - epel
     - setup
