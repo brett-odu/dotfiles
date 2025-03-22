@@ -1,0 +1,8 @@
+- name: Enable EPEL on RHEL-like distros
+  ansible.builtin.yum:
+    name: epel-release
+    state: present
+  when: ansible_os_family == "RedHat"
+  tags:
+    - epel
+    - setup
