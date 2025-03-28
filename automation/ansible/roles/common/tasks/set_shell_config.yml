@@ -1,0 +1,9 @@
+- name: Set shell_config based on user shell
+  set_fact:
+    shell_config: >-
+      {{ '/home/' + ansible_user + '/.bashrc'
+         if '/bash' in ansible_env.SHELL
+         else '/home/' + ansible_user + '/.zshrc' }}
+  tags:
+    - shell
+    - config

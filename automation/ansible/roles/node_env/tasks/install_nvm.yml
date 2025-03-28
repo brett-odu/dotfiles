@@ -1,0 +1,75 @@
+# - name: Check if NVM is installed for dev_user
+#   stat:
+#     path: "/home/{{ dev_user }}/.nvm/nvm.sh"
+#   register: nvm_installed
+#   tags: [nvm, node, setup]
+
+- name: Install NVM for dev_user (if not present)
+  shell: |
+    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh | bash
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ dev_user }}"
+  # when: not nvm_installed.stat.exists
+  tags: [nvm, node, setup]
+
+- name: Ensure NVM is loaded in shell for dev_user
+  become: true
+  blockinfile:
+    path: "/home/{{ dev_user }}/{{ shell_config | basename }}"
+    block: |
+      export NVM_DIR="$HOME/.nvm"
+      [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+      [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+    create: yes
+    owner: "{{ dev_user }}"
+    group: "{{ dev_user }}"
+  tags: [nvm, node, shell]
+
+- name: Install Node.js using NVM for dev_user
+  shell: |
+    . "/home/{{ dev_user }}/.nvm/nvm.sh" && nvm install {{ node_version }}
+  args:
+    executable: /bin/bash
+  become: true
+  become_user: "{{ dev_user }}"
+  tags: [nvm, node, install]
+
+# - name: Check if NVM is installed for dev_user
+#   become: true
+#   stat:
+#     path: "/home/{{ dev_user }}/.nvm/nvm.sh"
+#   register: nvm_copied
+#   tags: [nvm, node, setup]
+
+# - name: Copy NVM from ansible_user to dev_user (if not present)
+#   become: true
+#   command: cp -r /home/{{ ansible_user }}/.nvm /home/{{ dev_user }}/
+#   when: not nvm_copied.stat.exists
+#   tags: [nvm, node, copy]
+
+# - name: Ensure dev_user owns .nvm directory
+#   become: true
+#   file:
+#     path: "/home/{{ dev_user }}/.nvm"
+#     state: directory
+#     owner: "{{ dev_user }}"
+#     group: "{{ dev_user }}"
+#     recurse: yes
+#   tags: [nvm, node, permissions]
+
+# - name: Ensure NVM is loaded in shell for dev_user
+#   become: true
+#   blockinfile:
+#     path: "/home/{{ dev_user }}/{{ shell_config | basename }}"
+#     block: |
+#       export NVM_DIR="$HOME/.nvm"
+#       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+#       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+#     marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
+#     create: yes
+#     owner: "{{ dev_user }}"
+#     group: "{{ dev_user }}"
+#   tags: [nvm, node, shell]

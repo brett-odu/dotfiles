@@ -1,0 +1,34 @@
+- name: Install ShellCheck
+  include_tasks: install_shellcheck.yml
+  tags:
+    - shellcheck
+    - lint
+
+- name: Install yamllint
+  include_tasks: install_yamllint.yml
+  tags:
+    - yamllint
+    - lint
+
+- name: Install Bat
+  include_tasks: install_bat.yml
+  tags:
+    - bat
+
+- name: Install starship
+  include_tasks: install_starship.yml
+  tags:
+    - starship
+
+- name: Install Zoxide
+  include_tasks: install_zoxide.yml
+  tags:
+    - zoxide
+
+- name: Install fzf
+  import_tasks: install_fzf.yml
+  tags: [fzf, shell, install]
+
+- name: Install tmux
+  import_tasks: install_tmux.yml
+  tags: [tmux]

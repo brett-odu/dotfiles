@@ -1,0 +1,24 @@
+- name: Install python3-libdnf5 using dnf (Fedora 39+)
+  become: true
+  ansible.builtin.command: dnf install -y python3-libdnf5
+  register: libdnf5_result
+  changed_when: libdnf5_result.rc == 0 and
+                libdnf5_result.stdout is defined and
+                "'Nothing to do' not in libdnf5_result.stdout"
+  failed_when: libdnf5_result.rc != 0
+  when:
+    - ansible_distribution == "Fedora"
+    - ansible_distribution_major_version is version('39', '>=')
+  tags:
+    - dnf
+    - libdnf5
+    - setup
+
+- name: Skipping libdnf5 install — not needed on RHEL
+  ansible.builtin.debug:
+    msg: "Skipping libdnf5 install — RHEL 10 still uses python3-libdnf (not libdnf5)."
+  when: ansible_distribution == "RedHat"
+  tags:
+    - dnf
+    - libdnf5
+    - setup

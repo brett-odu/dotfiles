@@ -1,0 +1,57 @@
+- name: Install {{ go_version }} from Official Tarball
+  become: true
+  tags: [go, install]
+  block:
+
+    - name: Detect system architecture
+      command: uname -m
+      register: architecture_output
+      changed_when: false
+
+    - name: Set Go architecture fact
+      set_fact:
+        go_arch: >-
+          {%- if 'aarch64' in architecture_output.stdout or 'arm64' in architecture_output.stdout -%}
+            arm64
+          {%- else -%}
+            amd64
+          {%- endif -%}
+
+    - name: Download Go tarball
+      get_url:
+        url: "https://go.dev/dl/{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+        dest: "/tmp/{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+        mode: '0644'
+      when: not (go_version_result.stat.exists | default(false))
+
+    - name: Remove existing Go installation
+      file:
+        path: /usr/local/go
+        state: absent
+
+    - name: Extract Go to /usr/local/
+      unarchive:
+        src: "/tmp/{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+        dest: /usr/local/
+        remote_src: yes
+        extra_opts: [--strip-components=0]
+
+    - name: Add Go to system-wide PATH
+      lineinfile:
+        path: /etc/profile.d/go.sh
+        line: 'export PATH=$PATH:/usr/local/go/bin'
+        state: present
+        create: yes
+        mode: '0644'
+
+    - name: Verify Go installation
+      command: /usr/local/go/bin/go version
+      register: go_version_result
+      changed_when: false
+      failed_when: go_version_result.rc != 0
+      tags: [go, verify]
+
+    - name: Show Go version
+      debug:
+        msg: "Go installed successfully: {{ go_version_result.stdout }}"
+      tags: [go, verify]

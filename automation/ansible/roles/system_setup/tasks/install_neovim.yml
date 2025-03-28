@@ -1,5 +1,5 @@
 - name: Include EPEL if needed
-  import_tasks: enable_epel.ansible.yml
+  import_tasks: install_epel.yml
   when: ansible_os_family == "RedHat"
   tags:
     - neovim
@@ -33,7 +33,7 @@
   become: yes
   ansible.builtin.yum:
     name:
-      - ninja-build
+      # - ninja-build # TODO: Update this when RHEL 10 is more mature
       - libtool
       - autoconf
       - automake

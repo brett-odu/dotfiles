@@ -1,0 +1,5 @@
+### Neovim ###
+# Neovim https://github.com/neovim/neovim?tab=readme-ov-file#install-from-source
+nvim_repo_url: "https://github.com/neovim/neovim.git"
+nvim_install_prefix: "/usr/local"
+nvim_build_type: "RelWithDebInfo"

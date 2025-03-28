@@ -1,0 +1,47 @@
+- name: Include EPEL if needed
+  import_tasks: install_epel.yml
+  when: ansible_os_family == "RedHat"
+  tags:
+    - ssh
+    - openssh
+    - system
+    - services
+    - epel
+
+- name: Ensure OpenSSH is installed and running (Linux only)
+  become: true
+  block:
+
+    - name: Install OpenSSH server on Debian-based systems
+      ansible.builtin.apt:
+        name: openssh-server
+        state: present
+        update_cache: yes
+      when: ansible_os_family == "Debian" and ansible_connection != "docker"
+
+    - name: Install OpenSSH server on RedHat-based systems
+      ansible.builtin.yum:
+        name: openssh-server
+        state: present
+      when: ansible_os_family == "RedHat" and ansible_connection != "docker"
+
+    - name: Install OpenSSH server on Arch-based systems
+      ansible.builtin.pacman:
+        name: openssh
+        state: present
+        update_cache: yes
+      when: ansible_distribution == "Archlinux" and ansible_connection != "docker"
+
+    - name: Enable and start SSH service
+      ansible.builtin.service:
+        name: "{{ 'ssh' if ansible_os_family == 'Debian' else 'sshd' }}"
+        state: started
+        enabled: true
+      when: ansible_connection != "docker"
+
+  when: ansible_os_family != "Darwin"
+  tags:
+    - ssh
+    - openssh
+    - system
+    - services

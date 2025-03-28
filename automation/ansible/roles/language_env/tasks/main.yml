@@ -1,0 +1,30 @@
+- name: Install Go
+  include_tasks: install_go.yml
+  tags:
+    - go
+    - verify
+
+- name: Install Go Modules
+  include_tasks: install_go_modules.yml
+  tags:
+    - go
+    - verify
+
+- name: Install Rust
+  include_tasks: install_rust.yml
+  tags:
+    - rust
+    - install
+    - config
+
+- name: Install rbenv and Ruby
+  include_tasks: install_rbenv.yml
+  tags:
+    - ruby
+    - rbenv
+
+- name: Install pyenv and Python
+  include_tasks: install_pyenv.yml
+  tags:
+    - python
+    - pyenv

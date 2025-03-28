@@ -1,0 +1,52 @@
+- name: Install and configure Zsh + Oh My Zsh for dev_user
+  become: true
+  tags: [zsh, shell, config]
+  block:
+
+    - name: Install Zsh shell
+      package:
+        name: zsh
+        state: present
+      tags: [zsh, install]
+
+    - name: Ensure Oh My Zsh is installed for dev_user
+      become_user: "{{ dev_user }}"
+      shell: |
+        if [ ! -d "$HOME/.oh-my-zsh" ]; then
+          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
+        fi
+      args:
+        executable: /bin/bash
+      tags: [zsh, ohmyzsh]
+
+    - name: Ensure custom plugin directory exists
+      file:
+        path: "/home/{{ dev_user }}/.oh-my-zsh/custom/plugins"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        mode: '0755'
+      tags: [zsh, plugins]
+
+    - name: Install Zsh plugins for dev_user
+      git:
+        repo: "{{ item.repo }}"
+        dest: "/home/{{ dev_user }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
+        version: "{{ item.version | default('master') }}"
+      loop:
+        - { name: "zsh-autosuggestions", repo: "https://github.com/zsh-users/zsh-autosuggestions.git" }
+        - { name: "zsh-syntax-highlighting", repo: "https://github.com/zsh-users/zsh-syntax-highlighting.git" }
+        - { name: "you-should-use", repo: "https://github.com/MichaelAquilina/zsh-you-should-use.git" }
+        - { name: "zsh-navigation-tools", repo: "https://github.com/psprint/zsh-navigation-tools.git", version: "main" }
+      loop_control:
+        label: "{{ item.name }}"
+      tags: [zsh, plugins]
+
+    - name: Copy .zshrc to dev_user home
+      copy:
+        src: "{{ zshrc_path }}"
+        dest: "/home/{{ dev_user }}/.zshrc"
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        mode: '0644'
+      tags: [zsh, config]

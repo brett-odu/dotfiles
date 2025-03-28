@@ -1,0 +1,34 @@
+- name: Install Go Modules for dev_user
+  become: true
+  tags: [go, modules, install]
+  block:
+
+    - name: Ensure Go bin directory exists for dev_user
+      file:
+        path: "/home/{{ dev_user }}/go/bin"
+        state: directory
+        mode: '0755'
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+
+    - name: Install Go modules for dev_user
+      shell: |
+        export PATH=/usr/local/go/bin:$HOME/go/bin:$PATH
+        for module in {{ go_modules | join(" ") }}; do
+          go install "$module@latest"
+        done
+      args:
+        executable: /bin/bash
+      become_user: "{{ dev_user }}"
+
+    - name: Verify Go tool (gopls) installed
+      command: "/home/{{ dev_user }}/go/bin/gopls version"
+      register: gopls_check
+      changed_when: false
+      failed_when: gopls_check.rc != 0
+      tags: [go, verify]
+
+    - name: Show gopls version
+      debug:
+        msg: "gopls installed and working: {{ gopls_check.stdout }}"
+      tags: [go, verify]

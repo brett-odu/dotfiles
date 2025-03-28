@@ -1,0 +1,6 @@
+go_version: "go1.24.1"
+
+go_modules:
+  - golang.org/x/tools/gopls
+  - github.com/golangci/golangci-lint/cmd/golangci-lint
+  - github.com/segmentio/golines

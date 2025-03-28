@@ -1,0 +1,30 @@
+- name: Install starship
+  become: true
+  block:
+
+    - name: Check if starship is already installed
+      stat:
+        path: /usr/local/bin/starship
+      register: starship_binary
+      tags: [starship, install]
+
+    - name: Download and install starship if not present
+      shell: |
+        curl -sS https://starship.rs/install.sh | sh -s -- -y
+      args:
+        executable: /bin/bash
+      when: not starship_binary.stat.exists
+      tags: [starship, install]
+
+    - name: Verify starship installation
+      become: false
+      command: starship --version
+      register: starship_version
+      changed_when: false
+      failed_when: starship_version.rc != 0
+      tags: [starship, verify]
+
+    - name: Show installed starship version
+      debug:
+        msg: "Installed starship version: {{ starship_version.stdout }}"
+      tags: [starship, verify]

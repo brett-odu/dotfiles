@@ -1,0 +1,38 @@
+- name: Install Helm
+  become: true
+  tags: [helm, install]
+  block:
+
+    - name: Check if Helm is already installed
+      stat:
+        path: /usr/local/bin/helm
+      register: helm_installed
+
+    - name: Download Helm installation script
+      get_url:
+        url: "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3"
+        dest: "/tmp/get_helm.sh"
+        mode: "0700"
+      when: not helm_installed.stat.exists
+
+    - name: Run Helm installation script
+      command: /tmp/get_helm.sh
+      environment:
+        PATH: "/usr/local/bin:/usr/bin:/bin"
+      args:
+        creates: /usr/local/bin/helm
+      when: not helm_installed.stat.exists
+
+    - name: Verify Helm installation
+      shell: |
+        export PATH=$PATH:/usr/local/bin
+        helm version --short
+      register: helm_version
+      changed_when: false
+      failed_when: helm_version.rc != 0
+      tags: [helm, verify]
+
+    - name: Show Helm version
+      debug:
+        msg: "Helm version installed: {{ helm_version.stdout }}"
+      tags: [helm, verify]
