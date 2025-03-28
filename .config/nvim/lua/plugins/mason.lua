@@ -23,12 +23,15 @@ return {
             ensure_installed = {
                 "bashls",
                 "cssls",
+                "docker_compose_language_service",
                 "dockerls",
                 "eslint",
+                "golangci_lint_ls",
                 "gopls",
                 "helm_ls",
                 "html",
                 "jdtls",
+                "jinja_lsp",
                 "jsonls",
                 "lua_ls",
                 "marksman",
@@ -63,6 +66,9 @@ return {
         
                 -- Docker
                 "hadolint",
+
+                -- Ruby
+                "rubocop",
             },
         })
         require("mason-null-ls").setup({
@@ -77,6 +83,7 @@ return {
                 "shfmt",
                 "shellcheck",
                 "hadolint",
+                "rubocop",
             },
             automatic_installation = true,
         })
@@ -90,12 +97,14 @@ return {
                 null_ls.builtins.formatting.black,
                 null_ls.builtins.formatting.isort,
                 null_ls.builtins.formatting.shfmt,
+                null_ls.builtins.formatting.rubocop,
 
                 -- Linting
                 null_ls.builtins.diagnostics.eslint_d,
                 null_ls.builtins.diagnostics.golangci_lint,
                 null_ls.builtins.diagnostics.shellcheck,
                 null_ls.builtins.diagnostics.hadolint,
+                null_ls.builtins.diagnostics.rubocop,
             },
         })
 
