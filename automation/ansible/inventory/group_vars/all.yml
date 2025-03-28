@@ -1,5 +1,8 @@
 dev_user: bwarren
 
-
 ansible_user: ansible
 ansible_python_interpreter: /usr/bin/python3
+
+architecture: "{{ ansible_architecture }}"
+
+# shell_config: ".zshrc"

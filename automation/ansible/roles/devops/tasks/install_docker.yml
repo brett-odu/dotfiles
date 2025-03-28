@@ -1,0 +1,124 @@
+- name: Configure Docker APT repository
+  become: true
+  block:
+    - name: Check if Docker APT repo already exists
+      stat:
+        path: /etc/apt/sources.list.d/docker.list
+      register: docker_repo_file
+      tags: [docker, repo]
+
+    - name: Create apt keyring directory
+      file:
+        path: /etc/apt/keyrings
+        state: directory
+        mode: '0755'
+      when: not docker_repo_file.stat.exists
+
+    - name: Normalize distribution name for Docker repo
+      set_fact:
+        docker_distribution_name: >-
+          {{ 'debian' if ansible_distribution | lower == 'kali' else ansible_distribution | lower }}
+
+    - name: Download Docker's GPG key
+      get_url:
+        url: "https://download.docker.com/linux/{{ docker_distribution_name }}/gpg"
+        dest: /etc/apt/keyrings/docker.asc
+        mode: '0644'
+        validate_certs: true
+      when: not docker_repo_file.stat.exists
+
+    - name: Debug docker_distribution_name
+      debug:
+        msg: "docker_distribution_name = {{ docker_distribution_name }}"
+
+    - name: Get dpkg architecture dynamically
+      command: dpkg --print-architecture
+      register: architecture_output
+      changed_when: false
+
+    - name: Debug dpkg architecture output
+      debug:
+        msg: "dpkg reports architecture_output.stdout = {{ architecture_output.stdout }}"
+
+    - name: Debug ansible_architecture
+      debug:
+        msg: "ansible_architecture = {{ ansible_architecture }}"
+
+
+    - name: Set Docker APT release name
+      set_fact:
+        docker_distribution_release: "{{ 'bookworm' if docker_distribution_name == 'debian' else ansible_distribution_release }}"
+
+    - name: Debug full Docker repo line
+      debug:
+        msg: "deb [arch={{ architecture_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_name }} {{ docker_distribution_release }} stable"
+
+
+    - name: Add Docker APT repository
+      copy:
+        dest: /etc/apt/sources.list.d/docker.list
+        content: |
+          deb [arch={{ architecture_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_name }} {{ docker_distribution_release }} stable
+        mode: '0644'
+      when: not docker_repo_file.stat.exists
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+  tags: [docker, repo]
+
+- name: Install Docker packages
+  become: true
+  block:
+    - name: Install Docker engine and tools
+      package:
+        name:
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io
+          - docker-buildx-plugin
+          - docker-compose-plugin
+        state: present
+  rescue:
+    - name: Handle Docker install failure
+      debug:
+        msg: "Docker package installation failed."
+  tags: [docker, install]
+
+- name: Configure Docker group access
+  become: true
+  block:
+    - name: Ensure docker group exists
+      group:
+        name: docker
+        state: present
+
+    - name: Add users to docker group
+      loop:
+        - "{{ ansible_user }}"
+        - "{{ dev_user }}"
+      loop_control:
+        loop_var: user
+      user:
+        name: "{{ user }}"
+        groups: docker
+        append: yes
+
+    - name: Warn about required logout or reboot
+      debug:
+        msg: "Docker group added — logout or reboot may be required for group membership to take effect."
+  tags: [docker, group]
+
+- name: Verify Docker installation
+  become: false
+  block:
+    - name: Check Docker CLI access
+      command: docker --version
+      register: docker_version
+      changed_when: false
+      failed_when: docker_version.rc != 0
+
+    - name: Show Docker version
+      debug:
+        msg: "Docker is working: {{ docker_version.stdout }}"
+  tags: [docker, verify]

@@ -1,0 +1,21 @@
+- name: Install Zoxide
+  become: true
+  block:
+
+    - name: Download and install Zoxide to local user bin
+      become: false
+      shell: |
+        curl -sS https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh | bash
+      args:
+        executable: /bin/bash
+        creates: "{{ ansible_env.HOME }}/.local/bin/zoxide"
+
+    - name: Move Zoxide binary to /usr/local/bin
+      copy:
+        src: "{{ ansible_env.HOME }}/.local/bin/zoxide"
+        dest: /usr/local/bin/zoxide
+        mode: '0755'
+        remote_src: yes
+      when: ansible_env.HOME is defined
+
+  tags: [zoxide, install]

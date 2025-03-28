@@ -1,0 +1,16 @@
+- name: Install Docker and Setup Docker Group
+  include_tasks: install_container_engine.yml
+  tags:
+    - container
+    - docker
+    - podman
+    - install
+    - group
+    - verify
+
+- name: Install Helm
+  include_tasks: install_helm.yml
+  tags:
+    - helm
+    - install
+    - verify

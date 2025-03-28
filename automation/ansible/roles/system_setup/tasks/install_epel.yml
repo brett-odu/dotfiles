@@ -1,7 +1,15 @@
+# - name: Ensure DNF5 Python bindings are available
+#   import_tasks: ../../common/tasks/dnf5_prereqs.yml
+#   when: ansible_os_family == "RedHat"
+#   tags:
+#     - dnf
+#     - setup
+
 - name: Enable EPEL on RHEL-like distros
   become: true
   block:
 
+    # TODO: Update this when RHEL 10 is more mature
     - name: Enable CodeReady Builder repo (RHEL 9)
       ansible.builtin.command: subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms
       when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
@@ -17,7 +25,6 @@
       ansible.builtin.dnf:
         name: "https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm"
         state: present
-        disable_gpg_check: no
       when: ansible_distribution == "RedHat" and ansible_distribution_major_version == "9"
 
     - name: Enable CRB for CentOS-like distros
@@ -25,15 +32,13 @@
       when: ansible_distribution in ["CentOS", "AlmaLinux", "Rocky"]
       changed_when: false
 
-    - name: Install EPEL repos (CentOS-like)
+    - name: Install EPEL release for CentOS-like distros
       ansible.builtin.dnf:
-        name:
-          - epel-release
-          - epel-next-release
+        name: epel-release
         state: present
       when: ansible_distribution in ["CentOS", "AlmaLinux", "Rocky"]
 
-    - name: Update DNF cache (RedHat family)
+    - name: Update DNF cache
       ansible.builtin.dnf:
         update_cache: yes
       when: ansible_os_family == "RedHat"

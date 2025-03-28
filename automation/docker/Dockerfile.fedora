@@ -1,4 +1,4 @@
-FROM fedora:39
+FROM fedora:42
 
 # Install required dependencies
 RUN dnf install -y sudo python3 python3-pip

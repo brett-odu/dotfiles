@@ -1,0 +1,29 @@
+- name: Install Podman
+  become: true
+  block:
+    - name: Install Podman package
+      package:
+        name: podman
+        state: present
+
+    - name: Optionally symlink docker → podman
+      file:
+        src: /usr/bin/podman
+        dest: /usr/local/bin/docker
+        state: link
+      when: docker_symlink_for_podman | default(true)
+  tags: [podman, install]
+
+- name: Verify Podman installation
+  become: false
+  block:
+    - name: Check Podman version
+      command: podman --version
+      register: podman_version
+      changed_when: false
+      failed_when: podman_version.rc != 0
+
+    - name: Show Podman version
+      debug:
+        msg: "Podman is working: {{ podman_version.stdout }}"
+  tags: [podman, verify]

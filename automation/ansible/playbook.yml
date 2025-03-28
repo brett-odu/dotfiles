@@ -1,7 +1,31 @@
-- hosts: all
+- name: Provision local or remote dev environment
+  hosts: all
+
+  pre_tasks:
+
+    - name: Ensure DNF5 Python bindings on Fedora/RHEL 10+
+      import_tasks: roles/common/tasks/dnf5_prereqs.yml
+      when: ansible_os_family == "RedHat"
+
+    - name: Set shell configuration path
+      import_tasks: roles/common/tasks/set_shell_config.yml
+      when: ansible_env.SHELL is defined
+
+    - name: Assert required variables are defined
+      ansible.builtin.assert:
+        that:
+          - nvm_version is defined
+          - node_version is defined
+          - ansible_user is defined
+          - dev_user is defined
+
   roles:
-    - system_setup
+    - system_setup # Has create_users.yml
     - ssh_setup
+    - language_env
+    - node_env
+    - devops
+    - cli_tools
     - dotfiles
     - shell_setup
     - system_cleanup

@@ -1,0 +1,193 @@
+- name: Include EPEL if needed
+  import_tasks: ../../system_setup/tasks/install_epel.yml
+  when: ansible_os_family == "RedHat"
+  tags:
+    - ruby
+    - setup
+    - epel
+
+- name: Install Ruby build dependencies (Debian/Ubuntu)
+  become: true
+  apt:
+    name:
+      - autoconf
+      - bison
+      - build-essential
+      - libssl-dev
+      - libyaml-dev
+      - libreadline-dev
+      - zlib1g-dev
+      - libncurses5-dev
+      - libffi-dev
+      - libgdbm6
+      - libgdbm-dev
+    state: present
+    update_cache: yes
+  when: ansible_os_family == "Debian"
+  tags: [ruby, build, deps]
+
+- name: Install Ruby build dependencies (RedHat-based)
+  become: true
+  dnf:
+    name:
+      - gcc
+      - bison
+      - autoconf
+      - make
+      - libffi-devel
+      - readline-devel
+      - zlib-devel
+      - openssl-devel
+      # - gdbm-devel
+      - ncurses-devel
+      # - libyaml-devel
+      - curl
+      - tar
+      - patch
+      - findutils
+      - perl-core
+      - perl
+      # - perl-FindBin
+    state: present
+  ignore_errors: yes
+  when: ansible_os_family == "RedHat"
+  tags: [ruby, build, deps]
+
+- name: Build and install libyaml from source
+  become: true
+  block:
+    - name: Download libyaml
+      get_url:
+        url: https://github.com/yaml/libyaml/archive/refs/tags/0.2.5.tar.gz
+        dest: /tmp/libyaml.tar.gz
+
+    - name: Extract libyaml
+      unarchive:
+        src: /tmp/libyaml.tar.gz
+        dest: /tmp/
+        remote_src: true
+
+    - name: Compile and install libyaml
+      shell: |
+        cd /tmp/libyaml-0.2.5
+        ./bootstrap
+        ./configure --prefix=/usr/local
+        make
+        make install
+      args:
+        executable: /bin/bash
+  when: ansible_os_family == "RedHat"
+  tags: [ruby, build, deps]
+
+- name: Install rbenv and ruby-build for dev_user
+  become: true
+  tags: [ruby, rbenv, install]
+  block:
+
+    # - name: Ensure .rbenv/plugins directory exists
+    #   file:
+    #     path: "/home/{{ dev_user }}/.rbenv/plugins"
+    #     state: directory
+    #     owner: "{{ dev_user }}"
+    #     group: "{{ dev_user }}"
+    #     recurse: true
+    #     mode: '0755'
+
+    # - name: Check if rbenv is a Git repository
+    #   stat:
+    #     path: "/home/{{ dev_user }}/.rbenv/.git"
+    #   register: rbenv_git_dir
+    #   become: true
+
+    # - name: Remove existing non-git rbenv directory
+    #   file:
+    #     path: "/home/{{ dev_user }}/.rbenv"
+    #     state: absent
+    #   when: not rbenv_git_dir.stat.exists
+
+    - name: Clone rbenv (if not present)
+      git:
+        repo: "https://github.com/rbenv/rbenv.git"
+        dest: "/home/{{ dev_user }}/.rbenv"
+        version: master
+        force: yes
+      become_user: "{{ dev_user }}"
+      # when: not rbenv_git_dir.stat.exists
+
+    # - name: Check if ruby-build is a Git repo
+    #   stat:
+    #     path: "/home/{{ dev_user }}/.rbenv/plugins/ruby-build/.git"
+    #   register: ruby_build_git_dir
+    #   become: true
+
+    # - name: Remove existing non-git ruby-build directory
+    #   file:
+    #     path: "/home/{{ dev_user }}/.rbenv/plugins/ruby-build"
+    #     state: absent
+    #   when: not ruby_build_git_dir.stat.exists
+
+    - name: Clone ruby-build (if not present)
+      git:
+        repo: "https://github.com/rbenv/ruby-build.git"
+        dest: "/home/{{ dev_user }}/.rbenv/plugins/ruby-build"
+        version: master
+        force: yes
+      become_user: "{{ dev_user }}"
+      # when: not ruby_build_git_dir.stat.exists
+
+    - name: Ensure rbenv is in shell config
+      become: true
+      blockinfile:
+        path: "/home/{{ dev_user }}/{{ shell_config | basename }}"
+        block: |
+          export PATH="$HOME/.rbenv/bin:$PATH"
+          eval "$(rbenv init - bash)"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - RBENV"
+        create: yes
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        mode: '0644'
+      tags: [ruby, rbenv, shell]
+
+    - name: Install latest stable Ruby and set global using rbenv
+      become: true
+      become_user: "{{ dev_user }}"
+      shell: |
+        mkdir -p "$HOME/tmp"
+        export TMPDIR="$HOME/tmp"
+        export PATH="$HOME/.rbenv/bin:$PATH"
+        eval "$(rbenv init - bash)"
+        latest=$(rbenv install -l | grep -v - | tail -1)
+        rbenv install -s "$latest"
+        rbenv global "$latest"
+      args:
+        executable: /bin/bash
+      register: ruby_install
+      changed_when: "'Installing' in ruby_install.stdout"
+      tags: [ruby, rbenv, install]
+
+    - name: Show installed Ruby version
+      become: true
+      become_user: "{{ dev_user }}"
+      shell: |
+        export PATH="$HOME/.rbenv/bin:$PATH"
+        eval "$(rbenv init - bash)"
+        ruby -v
+      args:
+        executable: /bin/bash
+      register: ruby_version
+      changed_when: false
+      tags: [ruby, verify]
+
+    - name: Display Ruby version
+      debug:
+        msg: "Installed Ruby: {{ ruby_version.stdout }}"
+      tags: [ruby, verify]
+
+    - name: Clean up Ruby build tmpdir
+      file:
+        path: "/home/{{ dev_user }}/tmp"
+        state: absent
+      become: true
+      tags: [ruby, cleanup]
+

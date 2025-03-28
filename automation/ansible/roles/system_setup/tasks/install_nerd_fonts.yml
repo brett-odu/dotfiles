@@ -1,0 +1,40 @@
+- name: Install Nerd Fonts System-Wide
+  become: true
+  tags: [nerd_fonts, install]
+  block:
+
+    - name: Ensure fontconfig is installed
+      package:
+        name: fontconfig
+        state: present
+      tags: [nerd_fonts]
+
+    - name: Create system fonts directory
+      file:
+        path: "/usr/local/share/fonts/JetBrainsMono"
+        state: directory
+        mode: '0755'
+      tags: [nerd_fonts]
+
+    - name: Download JetBrainsMono Nerd Font zip
+      get_url:
+        url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+        dest: "/usr/local/share/fonts/JetBrainsMono/JetBrainsMono.zip"
+        mode: '0644'
+      tags: [nerd_fonts]
+
+    - name: Extract JetBrainsMono Nerd Font
+      unarchive:
+        src: "/usr/local/share/fonts/JetBrainsMono/JetBrainsMono.zip"
+        dest: "/usr/local/share/fonts/JetBrainsMono"
+        remote_src: true
+      tags: [nerd_fonts]
+
+    - name: Rebuild font cache
+      command: fc-cache -fv
+      tags: [nerd_fonts]
+
+  rescue:
+    - name: Warn user if Nerd Font installation fails
+      debug:
+        msg: "Nerd Font installation failed. You may need to install fonts manually on this system."

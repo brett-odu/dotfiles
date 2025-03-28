@@ -1,0 +1,11 @@
+- name: Clone dotfiles repo for dev_user
+  become: true
+  become_user: "{{ dev_user }}"
+  git:
+    repo: "git@github.com:brett-odu/dotfiles.git"
+    dest: "/home/{{ dev_user }}/.dotfiles"
+    version: develop
+    accept_hostkey: yes
+  environment:
+    GIT_SSH_COMMAND: "ssh -F /home/{{ dev_user }}/.ssh/config -o StrictHostKeyChecking=no"
+  tags: [dotfiles, git]

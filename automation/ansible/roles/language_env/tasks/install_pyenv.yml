@@ -1,0 +1,92 @@
+- name: Set up pyenv for dev_user
+  become: true
+  block:
+
+    - name: Check if pyenv is already installed for dev_user
+      stat:
+        path: "/home/{{ dev_user }}/.pyenv"
+      register: pyenv_installed
+
+    - name: Install pyenv via curl (if not installed)
+      become_user: "{{ dev_user }}"
+      shell: |
+        curl -fsSL https://pyenv.run | bash
+      args:
+        executable: /bin/bash
+      when: not pyenv_installed.stat.exists
+      tags: [pyenv, install]
+
+    - name: Ensure pyenv is added to shell config for dev_user
+      blockinfile:
+        path: "/home/{{ dev_user }}/{{ shell_config | basename }}"
+        marker: "# {mark} ANSIBLE MANAGED BLOCK - PYENV"
+        block: |
+          export PYENV_ROOT="$HOME/.pyenv"
+          export PATH="$PYENV_ROOT/bin:$PATH"
+          eval "$(pyenv init --path)"
+          eval "$(pyenv init -)"
+        create: yes
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        mode: '0644'
+      tags: [pyenv, shell]
+
+    - name: Ensure correct ownership of pyenv directory
+      file:
+        path: "/home/{{ dev_user }}/.pyenv"
+        state: directory
+        owner: "{{ dev_user }}"
+        group: "{{ dev_user }}"
+        recurse: yes
+      when: pyenv_installed.stat.exists
+      tags: [pyenv, permissions]
+
+    - name: Install latest stable Python and set global using pyenv
+      become: true
+      become_user: "{{ dev_user }}"
+      shell: |
+        mkdir -p "$HOME/tmp"
+        export TMPDIR="$HOME/tmp"
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init --path)"
+        eval "$(pyenv init -)"
+        latest=$(pyenv install --list | sed 's/^[[:space:]]*//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | tail -1)
+        pyenv install -s "$latest"
+        pyenv global "$latest"
+      args:
+        executable: /bin/bash
+      register: python_install
+      changed_when: "'Installing' in python_install.stdout"
+      tags: [python, pyenv, install]
+
+
+    - name: Show installed Python version
+      become: true
+      become_user: "{{ dev_user }}"
+      shell: |
+        export PYENV_ROOT="$HOME/.pyenv"
+        export PATH="$PYENV_ROOT/bin:$PATH"
+        eval "$(pyenv init --path)"
+        eval "$(pyenv init -)"
+        python --version
+      args:
+        executable: /bin/bash
+      register: python_version
+      changed_when: false
+      tags: [python, pyenv, verify]
+
+
+    - name: Display Python version
+      debug:
+        msg: "Installed Python: {{ python_version.stdout }}"
+      tags: [python, pyenv, verify]
+
+    - name: Clean up Python build tmpdir
+      file:
+        path: "/home/{{ dev_user }}/tmp"
+        state: absent
+      become: true
+      tags: [python, pyenv, cleanup]
+
+  tags: [python, pyenv]

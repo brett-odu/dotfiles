@@ -1,0 +1,75 @@
+- name: Install bat
+  become: true
+  block:
+
+    - name: Try installing bat via system package manager
+      block:
+
+        - name: Install via apt (Debian)
+          apt:
+            name: bat
+            state: present
+            update_cache: yes
+          register: bat_result
+          failed_when: false
+          when: ansible_os_family == "Debian"
+
+        - name: Install via yum/dnf (RedHat)
+          package:
+            name: bat
+            state: present
+          register: bat_result
+          failed_when: false
+          when: ansible_os_family == "RedHat"
+
+        - name: Install via Homebrew (MacOS)
+          community.general.homebrew:
+            name: bat
+            state: present
+          register: bat_result
+          failed_when: false
+          when: ansible_os_family == "Darwin"
+
+    - name: Download and install bat from GitHub release as fallback
+      block:
+
+        - name: Set bat arch string
+          set_fact:
+            bat_arch: >-
+              {{ 'x86_64' if ansible_architecture == 'x86_64' else
+                 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'unsupported' }}
+
+        - name: Fail if unsupported architecture
+          fail:
+            msg: "bat fallback is not supported on this architecture: {{ ansible_architecture }}"
+          when: bat_arch == 'unsupported'
+
+        - name: Download bat binary from GitHub
+          get_url:
+            url: "https://github.com/sharkdp/bat/releases/download/v0.25.0/bat-v0.25.0-{{ bat_arch }}-unknown-linux-musl.tar.gz"
+            dest: "/tmp/bat.tar.gz"
+            mode: '0644'
+
+        - name: Extract bat binary
+          unarchive:
+            src: "/tmp/bat.tar.gz"
+            dest: "/tmp"
+            remote_src: yes
+            extra_opts: [--strip-components=1]
+
+        - name: Install bat binary to /usr/local/bin
+          copy:
+            src: "/tmp/bat"
+            dest: "/usr/local/bin/bat"
+            mode: '0755'
+
+      when: (bat_result is not defined) or (bat_result.rc is defined and bat_result.rc != 0)
+
+    - name: Create bat symlink (batcat to bat) for Debian
+      file:
+        src: /usr/bin/batcat
+        dest: /usr/local/bin/bat
+        state: link
+      when: ansible_os_family == "Debian"
+
+  tags: [bat, install]
