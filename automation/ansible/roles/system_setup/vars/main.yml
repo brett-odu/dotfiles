@@ -1,7 +1,7 @@
 neovim_min_version: "0.8.0"
 architecture: "{{ ansible_architecture }}"
 
-# Neovim
+# Neovim https://github.com/neovim/neovim?tab=readme-ov-file#install-from-source
 nvim_repo_url: "https://github.com/neovim/neovim.git"
 nvim_install_prefix: "/usr/local"
 nvim_build_type: "RelWithDebInfo"

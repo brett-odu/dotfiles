@@ -1,8 +1,8 @@
 - name: Create users
   include_tasks: create_users.yml
 
-- name: Install required packages
-  include_tasks: install_packages.ansible.yml
+# - name: Install required packages
+#   include_tasks: install_packages.ansible.yml
 
 - name: Install Neovim
-  include_tasks: install_neovim.yml
+  include_tasks: install_neovim.ansible.yml
