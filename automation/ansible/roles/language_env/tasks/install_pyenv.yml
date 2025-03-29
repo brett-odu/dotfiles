@@ -60,7 +60,6 @@
       changed_when: "'Installing' in python_install.stdout"
       tags: [python, pyenv, install]
 
-
     - name: Show installed Python version
       become: true
       become_user: "{{ dev_user }}"
@@ -75,7 +74,6 @@
       register: python_version
       changed_when: false
       tags: [python, pyenv, verify]
-
 
     - name: Display Python version
       debug:

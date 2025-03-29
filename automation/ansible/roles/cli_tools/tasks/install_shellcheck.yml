@@ -47,3 +47,15 @@
       debug:
         msg: "ShellCheck installed: {{ shellcheck_version.stdout }}"
       tags: [shellcheck, verify]
+
+    - name: Remove shellcheck tar.xz
+      file:
+        path: "/tmp/shellcheck.tar.xz"
+        state: absent
+      tags: [cleanup, shellcheck]
+
+    - name: Remove shellcheck from /tmp
+      file:
+        path: "/tmp/shellcheck-stable/shellcheck"
+        state: absent
+      tags: [cleanup, shellcheck]

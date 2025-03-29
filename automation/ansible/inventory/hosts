@@ -9,7 +9,6 @@ rocky ansible_host=rocky
 kali ansible_host=kali
 
 [utm]
-# rhel9 ansible_host=rhel9-5
 rhel10 ansible_host=rhel10
 ubuntu24 ansible_host=ubuntu24-04
 debian12 ansible_host=debian12-10
@@ -18,14 +17,6 @@ alma9 ansible_host=alma9-5
 fedora42 ansible_host=fedora42
 rocky9 ansible_host=rocky9-5
 kali2025 ansible_host=kali2025
-
-# [cloud]
-# aws_ubuntu ansible_host=3.121.45.67
-# gcp_debian ansible_host=35.192.88.12
-
-# [hardware]
-# home_server ansible_host=192.168.1.50
-# rpi ansible_host=192.168.1.100
 
 [local]
 localhost ansible_connection=local

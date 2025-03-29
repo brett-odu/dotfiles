@@ -7,7 +7,6 @@
     create_home: yes
   when: "'containers' in group_names"
 
-
 - name: Allow ansible user to run sudo
   become: true
   copy:

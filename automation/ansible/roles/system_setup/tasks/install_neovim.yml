@@ -88,7 +88,7 @@
   ansible.builtin.git:
     repo: "{{ nvim_repo_url }}"
     dest: "/usr/local/src/neovim"
-    # version: stable
+    # version: stable # <omitted> == nightly
     update: yes
   tags:
     - neovim

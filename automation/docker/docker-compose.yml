@@ -18,8 +18,8 @@ services:
     restart: always
     tty: true
     volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro  # Mount SSH keys (read-only)
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro  # Mount SSH config
+      - ~/.ssh:/home/ansible/.ssh:ro
+      - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
   fedora:
     build:

@@ -1,22 +1,3 @@
-# - name: Install Rust for ansible_user (if not present)
-#   shell: |
-#     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-#   args:
-#     creates: "/home/{{ ansible_user }}/.cargo/bin/rustc"
-#     executable: /bin/bash
-#   become: true
-#   become_user: "{{ ansible_user }}"
-#   tags: [rust, install]
-
-# - name: Set default Rust version for ansible_user
-#   shell: |
-#     source "$HOME/.cargo/env" && rustup default stable
-#   args:
-#     executable: /bin/bash
-#   become: true
-#   become_user: "{{ ansible_user }}"
-#   tags: [rust, config]
-
 - name: Install Rust for dev_user (if not present)
   shell: |
     curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y

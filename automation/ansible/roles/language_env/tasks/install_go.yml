@@ -55,3 +55,9 @@
       debug:
         msg: "Go installed successfully: {{ go_version_result.stdout }}"
       tags: [go, verify]
+
+    - name: Remove Go tar.gz
+      file:
+        path: "/tmp/{{ go_version }}.linux-{{ go_arch }}.tar.gz"
+        state: absent
+      tags: [cleanup, go]

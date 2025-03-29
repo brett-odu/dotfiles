@@ -37,10 +37,14 @@
         mode: '0755'
         remote_src: yes
 
-    # - name: Ensure dev_user owns .fzf config
-    #   ansible.builtin.file:
-    #     path: "/home/{{ dev_user }}/.fzf"
-    #     state: directory
-    #     owner: "{{ dev_user }}"
-    #     group: "{{ dev_user }}"
-    #     mode: '0755'
+    - name: Remove fzf tar.gz
+      file:
+        path: "/tmp/fzf/fzf.tar.gz"
+        state: absent
+      tags: [cleanup, fzf]
+
+    - name: Remove fzf from /tmp
+      file:
+        path: "/tmp/fzf/fzf"
+        state: absent
+      tags: [cleanup, fzf]

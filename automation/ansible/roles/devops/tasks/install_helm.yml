@@ -36,3 +36,9 @@
       debug:
         msg: "Helm version installed: {{ helm_version.stdout }}"
       tags: [helm, verify]
+
+    - name: Remove helm install script
+      file:
+        path: "/tmp/get_helm.sh"
+        state: absent
+      tags: [cleanup, helm]

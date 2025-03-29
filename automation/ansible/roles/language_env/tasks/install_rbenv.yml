@@ -38,16 +38,13 @@
       - readline-devel
       - zlib-devel
       - openssl-devel
-      # - gdbm-devel
       - ncurses-devel
-      # - libyaml-devel
       - curl
       - tar
       - patch
       - findutils
       - perl-core
       - perl
-      # - perl-FindBin
     state: present
   ignore_errors: yes
   when: ansible_os_family == "RedHat"
@@ -76,6 +73,13 @@
         make install
       args:
         executable: /bin/bash
+
+    - name: Remove libyaml tar.gz
+      file:
+        path: "/tmp/libyaml.tar.gz"
+        state: absent
+      tags: [cleanup, ruby]  
+  
   when: ansible_os_family == "RedHat"
   tags: [ruby, build, deps]
 
@@ -84,27 +88,6 @@
   tags: [ruby, rbenv, install]
   block:
 
-    # - name: Ensure .rbenv/plugins directory exists
-    #   file:
-    #     path: "/home/{{ dev_user }}/.rbenv/plugins"
-    #     state: directory
-    #     owner: "{{ dev_user }}"
-    #     group: "{{ dev_user }}"
-    #     recurse: true
-    #     mode: '0755'
-
-    # - name: Check if rbenv is a Git repository
-    #   stat:
-    #     path: "/home/{{ dev_user }}/.rbenv/.git"
-    #   register: rbenv_git_dir
-    #   become: true
-
-    # - name: Remove existing non-git rbenv directory
-    #   file:
-    #     path: "/home/{{ dev_user }}/.rbenv"
-    #     state: absent
-    #   when: not rbenv_git_dir.stat.exists
-
     - name: Clone rbenv (if not present)
       git:
         repo: "https://github.com/rbenv/rbenv.git"
@@ -112,19 +95,6 @@
         version: master
         force: yes
       become_user: "{{ dev_user }}"
-      # when: not rbenv_git_dir.stat.exists
-
-    # - name: Check if ruby-build is a Git repo
-    #   stat:
-    #     path: "/home/{{ dev_user }}/.rbenv/plugins/ruby-build/.git"
-    #   register: ruby_build_git_dir
-    #   become: true
-
-    # - name: Remove existing non-git ruby-build directory
-    #   file:
-    #     path: "/home/{{ dev_user }}/.rbenv/plugins/ruby-build"
-    #     state: absent
-    #   when: not ruby_build_git_dir.stat.exists
 
     - name: Clone ruby-build (if not present)
       git:
@@ -133,7 +103,6 @@
         version: master
         force: yes
       become_user: "{{ dev_user }}"
-      # when: not ruby_build_git_dir.stat.exists
 
     - name: Ensure rbenv is in shell config
       become: true

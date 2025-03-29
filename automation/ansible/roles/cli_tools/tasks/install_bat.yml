@@ -63,6 +63,18 @@
             dest: "/usr/local/bin/bat"
             mode: '0755'
 
+        - name: Remove bat tar.gz
+          file:
+            path: "/tmp/bat.tar.gz"
+            state: absent
+          tags: [cleanup, fzf]
+
+        - name: Remove bat from /tmp
+          file:
+            path: "/tmp/bat"
+            state: absent
+          tags: [cleanup, fzf]
+
       when: (bat_result is not defined) or (bat_result.rc is defined and bat_result.rc != 0)
 
     - name: Create bat symlink (batcat to bat) for Debian
