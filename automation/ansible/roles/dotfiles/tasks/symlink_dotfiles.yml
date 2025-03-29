@@ -23,5 +23,5 @@
     - { src: "nvim", dest: ".config/nvim" }
     - { src: "wezterm", dest: ".config/wezterm" }
     - { src: "bat", dest: ".config/bat" }
-    - { src: "starship.toml", dest: ".config/starship.toml" }
+    - { src: "starship/starship.toml", dest: ".config/starship.toml" }
   tags: [dotfiles, symlink]
