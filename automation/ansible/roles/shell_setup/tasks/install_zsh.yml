@@ -1,35 +1,37 @@
+---
 - name: Install and configure Zsh + Oh My Zsh for dev_user
-  become: true
   tags: [zsh, shell, config]
   block:
-
     - name: Install Zsh shell
-      package:
+      become: true
+      ansible.builtin.package:
         name: zsh
         state: present
       tags: [zsh, install]
 
     - name: Ensure Oh My Zsh is installed for dev_user
+      become: true
       become_user: "{{ dev_user }}"
-      shell: |
-        if [ ! -d "$HOME/.oh-my-zsh" ]; then
-          sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
-        fi
+      ansible.builtin.shell: |
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended
       args:
         executable: /bin/bash
+        creates: "/home/{{ dev_user }}/.oh-my-zsh"
       tags: [zsh, ohmyzsh]
 
     - name: Ensure custom plugin directory exists
-      file:
+      become: true
+      ansible.builtin.file:
         path: "/home/{{ dev_user }}/.oh-my-zsh/custom/plugins"
         state: directory
         owner: "{{ dev_user }}"
         group: "{{ dev_user }}"
-        mode: '0755'
+        mode: "0755"
       tags: [zsh, plugins]
 
     - name: Install Zsh plugins for dev_user
-      git:
+      become: true
+      ansible.builtin.git:
         repo: "{{ item.repo }}"
         dest: "/home/{{ dev_user }}/.oh-my-zsh/custom/plugins/{{ item.name }}"
         version: "{{ item.version | default('master') }}"
@@ -43,10 +45,11 @@
       tags: [zsh, plugins]
 
     - name: Copy .zshrc to dev_user home
-      copy:
+      become: true
+      ansible.builtin.copy:
         src: "{{ zshrc_path }}"
         dest: "/home/{{ dev_user }}/.zshrc"
         owner: "{{ dev_user }}"
         group: "{{ dev_user }}"
-        mode: '0644'
+        mode: "0644"
       tags: [zsh, config]

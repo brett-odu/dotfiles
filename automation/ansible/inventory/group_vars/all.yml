@@ -1,6 +1,11 @@
-dev_user: bwarren
+---
+# 🟢 There's almost no chance you want to leave this value as is. Go ahead and change it.
+dev_user: bwarren # ← Your target environment username
 
-ansible_user: ansible
+# 🛑 The only reason to modify this is if your target's passwordless sudoer is called something else. If you are running this on your local machine, this is handled in group_vars/local.yml
+ansible_user: ansible # ← Or whatever your target's passwordless sudoer is called
+
+# 🛑 If you are about to change this because you are on a modern RHEL-like OS, slow your roll, you're probably better off overriding it in host_vars/
 ansible_python_interpreter: /usr/bin/python3
 
 architecture: "{{ ansible_architecture }}"

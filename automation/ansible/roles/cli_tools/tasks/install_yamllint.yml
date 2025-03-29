@@ -1,11 +1,11 @@
+---
 - name: Install yamllint for dev_user via pip
   become: true
   become_user: "{{ dev_user }}"
   tags: [yamllint, lint, devtools]
   block:
-
     - name: Ensure pip is available
-      shell: |
+      ansible.builtin.shell: |
         export PATH="$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH"
         pyenv which pip || echo "not found"
       args:
@@ -14,7 +14,7 @@
       changed_when: false
 
     - name: Install yamllint using pip if not already installed
-      shell: |
+      ansible.builtin.shell: |
         export PATH="$HOME/.pyenv/bin:$HOME/.pyenv/shims:$PATH"
         pip show yamllint >/dev/null 2>&1 || pip install --user yamllint
       args:
@@ -23,7 +23,7 @@
       changed_when: "'Successfully installed' in yamllint_install.stdout or yamllint_install.rc == 0"
 
     - name: Verify yamllint installation
-      shell: |
+      ansible.builtin.shell: |
         export PATH="$HOME/.local/bin:$PATH"
         yamllint --version
       args:
@@ -33,5 +33,5 @@
       failed_when: yamllint_version.rc != 0
 
     - name: Display yamllint version
-      debug:
+      ansible.builtin.debug:
         msg: "yamllint version: {{ yamllint_version.stdout }}"

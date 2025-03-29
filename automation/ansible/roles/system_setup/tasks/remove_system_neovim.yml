@@ -1,5 +1,6 @@
+---
 - name: Remove system-installed Neovim (Debian/Ubuntu)
-  become: yes
+  become: true
   ansible.builtin.apt:
     name: neovim
     state: absent
@@ -9,29 +10,11 @@
     - cleanup
 
 - name: Remove system-installed Neovim (RedHat/Fedora)
-  become: yes
-  ansible.builtin.yum:
+  become: true
+  ansible.builtin.dnf:
     name: neovim
     state: absent
   when: ansible_os_family == "RedHat"
-  tags:
-    - neovim
-    - cleanup
-
-- name: Remove system-installed Neovim (Arch)
-  ansible.builtin.pacman:
-    name: neovim
-    state: absent
-  when: ansible_distribution == "Archlinux"
-  tags:
-    - neovim
-    - cleanup
-
-- name: Remove system-installed Neovim (MacOS)
-  community.general.homebrew:
-    name: neovim
-    state: absent
-  when: ansible_os_family == "Darwin"
   tags:
     - neovim
     - cleanup

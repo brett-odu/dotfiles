@@ -1,1 +1,2 @@
-ansible_user: "{{ lookup('env', 'USER') }}"  # Uses the current logged-in user
+---
+ansible_user: "{{ lookup('env', 'USER') }}" # Uses the current logged-in user

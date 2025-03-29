@@ -1,61 +1,61 @@
+---
 - name: Install ShellCheck from official GitHub release
   become: true
   tags: [shellcheck, lint, devtools]
   block:
-
     - name: Check if ShellCheck is already installed
-      command: which shellcheck
+      ansible.builtin.command: which shellcheck
       register: shellcheck_check
-      ignore_errors: yes
+      ignore_errors: true
       changed_when: false
 
     - name: Set ShellCheck arch type
-      set_fact:
+      ansible.builtin.set_fact:
         shellcheck_arch: >-
           {{ 'aarch64' if ansible_architecture in ['aarch64', 'arm64'] else 'x86_64' }}
       when: shellcheck_check.rc != 0
 
     - name: Download ShellCheck tarball
-      get_url:
+      ansible.builtin.get_url:
         url: "https://github.com/koalaman/shellcheck/releases/download/stable/shellcheck-stable.linux.{{ shellcheck_arch }}.tar.xz"
         dest: /tmp/shellcheck.tar.xz
-        mode: '0644'
+        mode: "0644"
       when: shellcheck_check.rc != 0
 
     - name: Extract ShellCheck binary
-      unarchive:
+      ansible.builtin.unarchive:
         src: /tmp/shellcheck.tar.xz
         dest: /tmp/
-        remote_src: yes
+        remote_src: true
       when: shellcheck_check.rc != 0
 
     - name: Move ShellCheck binary into PATH
-      copy:
-        remote_src: yes
+      ansible.builtin.copy:
+        remote_src: true
         src: "/tmp/shellcheck-stable/shellcheck"
         dest: /usr/local/bin/shellcheck
-        mode: '0755'
+        mode: "0755"
       when: shellcheck_check.rc != 0
 
     - name: Verify ShellCheck installation
-      command: /usr/local/bin/shellcheck --version
+      ansible.builtin.command: /usr/local/bin/shellcheck --version
       register: shellcheck_version
       changed_when: false
       failed_when: shellcheck_version.rc != 0
 
     - name: Display ShellCheck version
-      debug:
+      ansible.builtin.debug:
         msg: "ShellCheck installed: {{ shellcheck_version.stdout }}"
       tags: [shellcheck, verify]
 
     - name: Remove shellcheck tar.xz
-      file:
+      ansible.builtin.file:
         path: "/tmp/shellcheck.tar.xz"
         state: absent
       tags: [cleanup, shellcheck]
 
     - name: Remove shellcheck from /tmp
-      file:
+      ansible.builtin.file:
         path: "/tmp/shellcheck-stable/shellcheck"
         state: absent
       tags: [cleanup, shellcheck]

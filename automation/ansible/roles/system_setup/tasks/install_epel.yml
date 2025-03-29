@@ -1,7 +1,10 @@
+---
 - name: Enable EPEL on RHEL-like distros
   become: true
+  tags:
+    - epel
+    - setup
   block:
-
     # TODO: Update this when RHEL 10 is more mature
     - name: Enable CodeReady Builder repo (RHEL 9)
       ansible.builtin.command: subscription-manager repos --enable codeready-builder-for-rhel-9-{{ ansible_architecture }}-rpms
@@ -33,9 +36,5 @@
 
     - name: Update DNF cache
       ansible.builtin.dnf:
-        update_cache: yes
+        update_cache: true
       when: ansible_os_family == "RedHat"
-
-  tags:
-    - epel
-    - setup

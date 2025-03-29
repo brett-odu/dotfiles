@@ -1,25 +1,25 @@
+---
 - name: Create users
-  include_tasks: create_users.yml
-
+  ansible.builtin.include_tasks: create_users.yml
 - name: Install OpenSSH server
-  import_tasks: install_openssh.yml
+  ansible.builtin.import_tasks: install_openssh.yml
   tags:
     - ssh
     - openssh
 
 - name: Remove any existing system-installed Neovim
-  import_tasks: remove_system_neovim.yml
+  ansible.builtin.import_tasks: remove_system_neovim.yml
   tags:
     - neovim
     - cleanup
 
 - name: Install Neovim
-  include_tasks: install_neovim.yml
+  ansible.builtin.include_tasks: install_neovim.yml
   tags:
     - neovim
     - setup
 
 - name: Install Nerd Fonts
-  include_tasks: install_nerd_fonts.yml
+  ansible.builtin.include_tasks: install_nerd_fonts.yml
   tags:
     - nerd_fonts

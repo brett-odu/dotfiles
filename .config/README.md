@@ -5,11 +5,11 @@ This documentation provides instructions on using the tools configured via Ansib
 
 ## Table of Contents
 
-- [Zoxide](./zoxide/zoxide.md)
-- [WezTerm](./wezterm/wezterm.md)
-- [Tmux](./tmux/tmux.md)
-- [Tmux Plugins](./tmux/tmux_plugins.md)
-- [Neovim](./nvim/README.md)
+- [Zoxide](docs/zoxide/zoxide.md)
+- [WezTerm](docs/wezterm/wezterm.md)
+- [Tmux](docs/tmux/tmux.md)
+- [Tmux Plugin0s](docs/tmux/tmux_plugins.md)
+- [Neovim](docs/nvim/README.md)
 
 Each section contains detailed usage information and key configurations.
 

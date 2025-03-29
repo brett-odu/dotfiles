@@ -1,29 +1,21 @@
+---
 - name: Install tmux
   become: true
   tags: [tmux, install]
   block:
-
     - name: Ensure tmux is installed via APT (Debian-based)
-      apt:
+      ansible.builtin.apt:
         name: tmux
         state: present
-        update_cache: yes
+        update_cache: true
       register: tmux_apt_result
       failed_when: false
       when: ansible_os_family == "Debian"
 
     - name: Ensure tmux is installed via DNF/YUM (RedHat-based)
-      package:
+      ansible.builtin.package:
         name: tmux
         state: present
       register: tmux_yum_result
       failed_when: false
       when: ansible_os_family == "RedHat"
-
-    - name: Ensure tmux is installed via Homebrew (MacOS)
-      community.general.homebrew:
-        name: tmux
-        state: present
-      register: tmux_brew_result
-      failed_when: false
-      when: ansible_os_family == "Darwin"

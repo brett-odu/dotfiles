@@ -1,31 +1,49 @@
-- name: Install NVM for dev_user (if not present)
-  shell: |
-    curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh | bash
+---
+- name: Check if NVM is already installed for dev_user
+  ansible.builtin.stat:
+    path: "/home/{{ dev_user }}/.nvm"
+  register: nvm_installed
+  become: true
+  become_user: "{{ dev_user }}"
+  tags: [nvm, node, setup]
+
+- name: Download NVM installer script
+  ansible.builtin.get_url:
+    url: "https://raw.githubusercontent.com/nvm-sh/nvm/{{ nvm_version }}/install.sh"
+    dest: "/tmp/install_nvm.sh"
+    mode: "0755"
+  when: not nvm_installed.stat.exists
+  tags: [nvm, node, setup]
+
+- name: Run NVM installer
+  ansible.builtin.command: /tmp/install_nvm.sh
   args:
-    executable: /bin/bash
+    creates: "/home/{{ dev_user }}/.nvm"
   become: true
   become_user: "{{ dev_user }}"
   tags: [nvm, node, setup]
 
 - name: Ensure NVM is loaded in shell for dev_user
   become: true
-  blockinfile:
+  ansible.builtin.blockinfile:
     path: "/home/{{ dev_user }}/{{ shell_config | basename }}"
     block: |
       export NVM_DIR="$HOME/.nvm"
       [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
       [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
     marker: "# {mark} ANSIBLE MANAGED BLOCK - NVM"
-    create: yes
+    create: true
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
+    mode: "0644"
   tags: [nvm, node, shell]
 
 - name: Install Node.js using NVM for dev_user
-  shell: |
+  ansible.builtin.shell: |
     . "/home/{{ dev_user }}/.nvm/nvm.sh" && nvm install {{ node_version }}
   args:
     executable: /bin/bash
   become: true
   become_user: "{{ dev_user }}"
+  changed_when: true
   tags: [nvm, node, install]

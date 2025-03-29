@@ -1,5 +1,6 @@
+---
 - name: Install Docker and Setup Docker Group
-  include_tasks: install_container_engine.yml
+  ansible.builtin.include_tasks: install_container_engine.yml
   tags:
     - container
     - docker
@@ -9,7 +10,7 @@
     - verify
 
 - name: Install Helm
-  include_tasks: install_helm.yml
+  ansible.builtin.include_tasks: install_helm.yml
   tags:
     - helm
     - install

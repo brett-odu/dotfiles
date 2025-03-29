@@ -1,0 +1,17 @@
+---
+# Ansible Lint config to reduce false positives and keep things clean
+
+warn_list:
+  - all # Enable all rules unless explicitly skipped
+
+skip_list:
+  - fqcn[action] # Skip false-positive FQCN resolution for actions like homebrew
+  - experimental # Skip unstable rules
+  - var-naming # Allow flexible variable naming (e.g., snake_case, camelCase)
+  - yaml[line-length] # We value readability over hard-wrapping YAML
+
+verbosity: 1
+
+# You can add overrides here per-role or task
+# per_file_ignores:
+#   - roles/cli_tools/tasks/install_bat.yml: fqcn[action]

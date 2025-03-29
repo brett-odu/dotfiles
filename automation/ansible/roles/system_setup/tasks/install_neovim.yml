@@ -1,5 +1,6 @@
+---
 - name: Include EPEL if needed
-  import_tasks: install_epel.yml
+  ansible.builtin.import_tasks: install_epel.yml
   when: ansible_os_family == "RedHat"
   tags:
     - neovim
@@ -7,7 +8,7 @@
     - epel
 
 - name: Install Neovim build prerequisites (Debian)
-  become: yes
+  become: true
   ansible.builtin.apt:
     name:
       - ninja-build
@@ -23,15 +24,15 @@
       - gettext
       - git
     state: present
-    update_cache: yes
+    update_cache: true
   when: ansible_os_family == "Debian"
   tags:
     - neovim
     - packages
 
 - name: Install Neovim build prerequisites (RedHat)
-  become: yes
-  ansible.builtin.yum:
+  become: true
+  ansible.builtin.dnf:
     name:
       # - ninja-build # TODO: Update this when RHEL 10 is more mature
       - libtool
@@ -50,52 +51,21 @@
     - neovim
     - packages
 
-- name: Install Neovim build prerequisites (Arch)
-  ansible.builtin.pacman:
-    name:
-      - base-devel
-      - cmake
-      - unzip
-      - ninja
-      - git
-    state: present
-    update_cache: yes
-  when: ansible_distribution == "Archlinux"
-  tags:
-    - neovim
-    - packages
-
-- name: Install Neovim build prerequisites (MacOS)
-  community.general.homebrew:
-    name:
-      - ninja
-      - libtool
-      - autoconf
-      - automake
-      - cmake
-      - pkg-config
-      - gettext
-      - curl
-      - git
-    state: present
-  when: ansible_os_family == "Darwin"
-  tags:
-    - neovim
-    - packages
-
 - name: Clone Neovim repository
+  # noqa latest[git]
   become: true
   ansible.builtin.git:
     repo: "{{ nvim_repo_url }}"
     dest: "/usr/local/src/neovim"
     # version: stable # <omitted> == nightly
-    update: yes
+    update: true
   tags:
     - neovim
     - source
     - git
 
-- block:
+- name: Build Neovim and handle build failures
+  block:
     - name: Build Neovim from source
       become: true
       ansible.builtin.command:
@@ -108,15 +78,13 @@
     - name: Fail gracefully if Neovim build fails
       ansible.builtin.fail:
         msg: "Neovim failed to build. Please check the build logs and prerequisites."
-  tags:
-    - neovim
-    - build
 
 - name: Install Neovim
   become: true
   ansible.builtin.command:
     cmd: "make install"
     chdir: "/usr/local/src/neovim"
+  changed_when: true
   tags:
     - neovim
     - install

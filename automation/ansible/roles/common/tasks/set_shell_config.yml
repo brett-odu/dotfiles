@@ -1,5 +1,6 @@
+---
 - name: Set shell_config based on user shell
-  set_fact:
+  ansible.builtin.set_fact:
     shell_config: >-
       {{ '/home/' + ansible_user + '/.bashrc'
          if '/bash' in ansible_env.SHELL

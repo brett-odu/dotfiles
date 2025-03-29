@@ -1,29 +1,30 @@
+---
 - name: Install Podman
   become: true
+  tags: [podman, install]
   block:
     - name: Install Podman package
-      package:
+      ansible.builtin.package:
         name: podman
         state: present
 
     - name: Optionally symlink docker → podman
-      file:
+      ansible.builtin.file:
         src: /usr/bin/podman
         dest: /usr/local/bin/docker
         state: link
       when: docker_symlink_for_podman | default(true)
-  tags: [podman, install]
 
 - name: Verify Podman installation
   become: false
+  tags: [podman, verify]
   block:
     - name: Check Podman version
-      command: podman --version
+      ansible.builtin.command: podman --version
       register: podman_version
       changed_when: false
       failed_when: podman_version.rc != 0
 
     - name: Show Podman version
-      debug:
+      ansible.builtin.debug:
         msg: "Podman is working: {{ podman_version.stdout }}"
-  tags: [podman, verify]

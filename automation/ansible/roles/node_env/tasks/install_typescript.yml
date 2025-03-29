@@ -1,11 +1,11 @@
+---
 - name: Install TypeScript via npm for dev_user
   become: true
   become_user: "{{ dev_user }}"
   tags: [typescript, node, devtools]
   block:
-
     - name: Check if TypeScript is already installed
-      shell: |
+      ansible.builtin.shell: |
         export NVM_DIR="$HOME/.nvm"
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
         command -v tsc >/dev/null 2>&1
@@ -16,16 +16,17 @@
       failed_when: false
 
     - name: Install TypeScript globally via npm
-      shell: |
+      ansible.builtin.shell: |
         export NVM_DIR="$HOME/.nvm"
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
         npm install -g typescript
       args:
         executable: /bin/bash
+      changed_when: true
       when: typescript_installed.rc != 0
 
     - name: Verify TypeScript installation
-      shell: |
+      ansible.builtin.shell: |
         export NVM_DIR="$HOME/.nvm"
         [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
         tsc --version
@@ -36,5 +37,5 @@
       failed_when: tsc_version.rc != 0
 
     - name: Display TypeScript version
-      debug:
+      ansible.builtin.debug:
         msg: "TypeScript version: {{ tsc_version.stdout }}"

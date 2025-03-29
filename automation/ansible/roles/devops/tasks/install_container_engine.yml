@@ -1,9 +1,10 @@
+---
 - name: Install Podman on RedHat-like systems
-  import_tasks: install_podman.yml
+  ansible.builtin.import_tasks: install_podman.yml
   when: ansible_os_family == "RedHat"
   tags: [podman, container, install]
 
 - name: Install Docker on Debian-based systems
-  import_tasks: install_docker.yml
+  ansible.builtin.import_tasks: install_docker.yml
   when: ansible_os_family == "Debian"
   tags: [docker, container, install]

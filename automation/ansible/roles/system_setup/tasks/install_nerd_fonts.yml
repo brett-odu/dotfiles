@@ -1,40 +1,41 @@
+---
 - name: Install Nerd Fonts System-Wide
   become: true
   tags: [nerd_fonts, install]
   block:
-
     - name: Ensure fontconfig is installed
-      package:
+      ansible.builtin.package:
         name: fontconfig
         state: present
       tags: [nerd_fonts]
 
     - name: Create system fonts directory
-      file:
+      ansible.builtin.file:
         path: "/usr/local/share/fonts/JetBrainsMono"
         state: directory
-        mode: '0755'
+        mode: "0755"
       tags: [nerd_fonts]
 
     - name: Download JetBrainsMono Nerd Font zip
-      get_url:
+      ansible.builtin.get_url:
         url: "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
         dest: "/usr/local/share/fonts/JetBrainsMono/JetBrainsMono.zip"
-        mode: '0644'
+        mode: "0644"
       tags: [nerd_fonts]
 
     - name: Extract JetBrainsMono Nerd Font
-      unarchive:
+      ansible.builtin.unarchive:
         src: "/usr/local/share/fonts/JetBrainsMono/JetBrainsMono.zip"
         dest: "/usr/local/share/fonts/JetBrainsMono"
         remote_src: true
       tags: [nerd_fonts]
 
     - name: Rebuild font cache
-      command: fc-cache -fv
+      ansible.builtin.command: fc-cache -fv
+      changed_when: true
       tags: [nerd_fonts]
 
   rescue:
     - name: Warn user if Nerd Font installation fails
-      debug:
+      ansible.builtin.debug:
         msg: "Nerd Font installation failed. You may need to install fonts manually on this system."

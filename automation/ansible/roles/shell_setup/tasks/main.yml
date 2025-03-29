@@ -1,7 +1,8 @@
+---
 - name: Install and configure Zsh with plugins
-  import_tasks: install_zsh.yml
+  ansible.builtin.import_tasks: install_zsh.yml
   tags: [zsh, shell]
 
 - name: Set Zsh as default shell
-  import_tasks: set_default_shell.yml
+  ansible.builtin.import_tasks: set_default_shell.yml
   tags: [zsh, shell, default]

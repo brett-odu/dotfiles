@@ -1,15 +1,16 @@
+---
 - name: Ensure dev_user owns all files in their home directory
   become: true
-  file:
+  ansible.builtin.file:
     path: "/home/{{ dev_user }}"
     state: directory
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
     mode: "0755"
-    recurse: yes
+    recurse: true
 
 - name: Remove passwordless sudo for dev_user
-  become: yes
-  file:
+  become: true
+  ansible.builtin.file:
     path: "/etc/sudoers.d/{{ dev_user }}"
     state: absent

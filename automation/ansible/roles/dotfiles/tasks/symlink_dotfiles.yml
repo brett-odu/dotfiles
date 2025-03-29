@@ -1,16 +1,17 @@
+---
 - name: Ensure ~/.config exists for dev_user
   become: true
-  file:
+  ansible.builtin.file:
     path: "/home/{{ dev_user }}/.config"
     state: directory
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
-    mode: '0755'
+    mode: "0755"
   tags: [dotfiles, config]
 
 - name: Symlink dotfiles into home directory
   become: true
-  file:
+  ansible.builtin.file:
     src: "/home/{{ dev_user }}/.dotfiles/.config/{{ item.src }}"
     dest: "/home/{{ dev_user }}/{{ item.dest }}"
     state: link

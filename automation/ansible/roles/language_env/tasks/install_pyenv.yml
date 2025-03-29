@@ -1,23 +1,29 @@
+---
 - name: Set up pyenv for dev_user
-  become: true
+  tags: [python, pyenv]
   block:
-
     - name: Check if pyenv is already installed for dev_user
-      stat:
+      become: true
+      ansible.builtin.stat:
         path: "/home/{{ dev_user }}/.pyenv"
       register: pyenv_installed
 
     - name: Install pyenv via curl (if not installed)
+      # noqa command-instead-of-module
+      become: true
       become_user: "{{ dev_user }}"
-      shell: |
+      ansible.builtin.shell: |
+        set -euo pipefail
         curl -fsSL https://pyenv.run | bash
       args:
         executable: /bin/bash
       when: not pyenv_installed.stat.exists
+      changed_when: true
       tags: [pyenv, install]
 
     - name: Ensure pyenv is added to shell config for dev_user
-      blockinfile:
+      become: true
+      ansible.builtin.blockinfile:
         path: "/home/{{ dev_user }}/{{ shell_config | basename }}"
         marker: "# {mark} ANSIBLE MANAGED BLOCK - PYENV"
         block: |
@@ -25,32 +31,34 @@
           export PATH="$PYENV_ROOT/bin:$PATH"
           eval "$(pyenv init --path)"
           eval "$(pyenv init -)"
-        create: yes
+        create: true
         owner: "{{ dev_user }}"
         group: "{{ dev_user }}"
-        mode: '0644'
+        mode: "0644"
       tags: [pyenv, shell]
 
     - name: Ensure correct ownership of pyenv directory
-      file:
+      become: true
+      ansible.builtin.file:
         path: "/home/{{ dev_user }}/.pyenv"
         state: directory
         owner: "{{ dev_user }}"
         group: "{{ dev_user }}"
-        recurse: yes
+        recurse: true
       when: pyenv_installed.stat.exists
       tags: [pyenv, permissions]
 
     - name: Install latest stable Python and set global using pyenv
       become: true
       become_user: "{{ dev_user }}"
-      shell: |
+      ansible.builtin.shell: |
         mkdir -p "$HOME/tmp"
         export TMPDIR="$HOME/tmp"
         export PYENV_ROOT="$HOME/.pyenv"
         export PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init --path)"
         eval "$(pyenv init -)"
+        set -euo pipefail
         latest=$(pyenv install --list | sed 's/^[[:space:]]*//' | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' | tail -1)
         pyenv install -s "$latest"
         pyenv global "$latest"
@@ -63,7 +71,7 @@
     - name: Show installed Python version
       become: true
       become_user: "{{ dev_user }}"
-      shell: |
+      ansible.builtin.shell: |
         export PYENV_ROOT="$HOME/.pyenv"
         export PATH="$PYENV_ROOT/bin:$PATH"
         eval "$(pyenv init --path)"
@@ -76,15 +84,13 @@
       tags: [python, pyenv, verify]
 
     - name: Display Python version
-      debug:
+      ansible.builtin.debug:
         msg: "Installed Python: {{ python_version.stdout }}"
       tags: [python, pyenv, verify]
 
     - name: Clean up Python build tmpdir
-      file:
+      ansible.builtin.file:
         path: "/home/{{ dev_user }}/tmp"
         state: absent
       become: true
       tags: [python, pyenv, cleanup]
-
-  tags: [python, pyenv]

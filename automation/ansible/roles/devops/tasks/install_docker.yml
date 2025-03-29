@@ -1,77 +1,78 @@
+---
 - name: Configure Docker APT repository
   become: true
+  tags: [docker, repo]
   block:
     - name: Check if Docker APT repo already exists
-      stat:
+      ansible.builtin.stat:
         path: /etc/apt/sources.list.d/docker.list
       register: docker_repo_file
       tags: [docker, repo]
 
     - name: Create apt keyring directory
-      file:
+      ansible.builtin.file:
         path: /etc/apt/keyrings
         state: directory
-        mode: '0755'
+        mode: "0755"
       when: not docker_repo_file.stat.exists
 
     - name: Normalize distribution name for Docker repo
-      set_fact:
+      ansible.builtin.set_fact:
         docker_distribution_name: >-
           {{ 'debian' if ansible_distribution | lower == 'kali' else ansible_distribution | lower }}
 
     - name: Download Docker's GPG key
-      get_url:
+      ansible.builtin.get_url:
         url: "https://download.docker.com/linux/{{ docker_distribution_name }}/gpg"
         dest: /etc/apt/keyrings/docker.asc
-        mode: '0644'
+        mode: "0644"
         validate_certs: true
       when: not docker_repo_file.stat.exists
 
     - name: Debug docker_distribution_name
-      debug:
+      ansible.builtin.debug:
         msg: "docker_distribution_name = {{ docker_distribution_name }}"
 
     - name: Get dpkg architecture dynamically
-      command: dpkg --print-architecture
+      ansible.builtin.command: dpkg --print-architecture
       register: architecture_output
       changed_when: false
 
     - name: Debug dpkg architecture output
-      debug:
+      ansible.builtin.debug:
         msg: "dpkg reports architecture_output.stdout = {{ architecture_output.stdout }}"
 
     - name: Debug ansible_architecture
-      debug:
+      ansible.builtin.debug:
         msg: "ansible_architecture = {{ ansible_architecture }}"
 
-
     - name: Set Docker APT release name
-      set_fact:
+      ansible.builtin.set_fact:
         docker_distribution_release: "{{ 'bookworm' if docker_distribution_name == 'debian' else ansible_distribution_release }}"
 
     - name: Debug full Docker repo line
-      debug:
-        msg: "deb [arch={{ architecture_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_name }} {{ docker_distribution_release }} stable"
-
+      ansible.builtin.debug:
+        msg: "deb [arch={{ architecture_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_name }}
+          {{ docker_distribution_release }} stable"
 
     - name: Add Docker APT repository
-      copy:
+      ansible.builtin.copy:
         dest: /etc/apt/sources.list.d/docker.list
         content: |
           deb [arch={{ architecture_output.stdout }} signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/{{ docker_distribution_name }} {{ docker_distribution_release }} stable
-        mode: '0644'
+        mode: "0644"
       when: not docker_repo_file.stat.exists
 
     - name: Update apt cache
-      apt:
-        update_cache: yes
-  tags: [docker, repo]
+      ansible.builtin.apt:
+        update_cache: true
 
 - name: Install Docker packages
   become: true
+  tags: [docker, install]
   block:
     - name: Install Docker engine and tools
-      package:
+      ansible.builtin.package:
         name:
           - docker-ce
           - docker-ce-cli
@@ -81,15 +82,15 @@
         state: present
   rescue:
     - name: Handle Docker install failure
-      debug:
+      ansible.builtin.debug:
         msg: "Docker package installation failed."
-  tags: [docker, install]
 
 - name: Configure Docker group access
   become: true
+  tags: [docker, group]
   block:
     - name: Ensure docker group exists
-      group:
+      ansible.builtin.group:
         name: docker
         state: present
 
@@ -99,26 +100,25 @@
         - "{{ dev_user }}"
       loop_control:
         loop_var: user
-      user:
+      ansible.builtin.user:
         name: "{{ user }}"
         groups: docker
-        append: yes
+        append: true
 
     - name: Warn about required logout or reboot
-      debug:
+      ansible.builtin.debug:
         msg: "Docker group added — logout or reboot may be required for group membership to take effect."
-  tags: [docker, group]
 
 - name: Verify Docker installation
   become: false
+  tags: [docker, verify]
   block:
     - name: Check Docker CLI access
-      command: docker --version
+      ansible.builtin.command: docker --version
       register: docker_version
       changed_when: false
       failed_when: docker_version.rc != 0
 
     - name: Show Docker version
-      debug:
+      ansible.builtin.debug:
         msg: "Docker is working: {{ docker_version.stdout }}"
-  tags: [docker, verify]

@@ -1,5 +1,5 @@
+---
 - name: Clone dotfiles repo
-  import_tasks: clone_dotfiles.yml
-
+  ansible.builtin.import_tasks: clone_dotfiles.yml
 - name: Symlink dotfiles
-  import_tasks: symlink_dotfiles.yml
+  ansible.builtin.import_tasks: symlink_dotfiles.yml

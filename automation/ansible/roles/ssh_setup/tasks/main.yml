@@ -1,54 +1,57 @@
+---
 - name: Ensure .ssh directory exists for dev_user
   become: true
-  file:
+  ansible.builtin.file:
     path: "/home/{{ dev_user }}/.ssh"
     state: directory
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
-    mode: '0700'
+    mode: "0700"
   tags: [ssh, config, dotfiles]
 
 - name: Copy SSH private key for dev_user
   become: true
-  copy:
+  ansible.builtin.copy:
     src: "{{ lookup('env', 'HOME') + '/.ssh/id_ed25519' }}"
     dest: "/home/{{ dev_user }}/.ssh/id_ed25519"
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
-    mode: '0600'
+    mode: "0600"
   when: ansible_connection not in ["docker", "local"]
-  ignore_errors: yes
+  register: private_key_copy
+  failed_when: private_key_copy is failed and 'could not find or access' not in private_key_copy.msg | default('')
   tags: [ssh, keys]
 
 - name: Copy SSH public key for dev_user
   become: true
-  copy:
+  ansible.builtin.copy:
     src: "{{ lookup('env', 'HOME') + '/.ssh/id_ed25519.pub' }}"
     dest: "/home/{{ dev_user }}/.ssh/id_ed25519.pub"
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
-    mode: '0644'
+    mode: "0644"
   when: ansible_connection not in ["docker", "local"]
-  ignore_errors: yes
+  register: public_key_copy
+  failed_when: public_key_copy is failed and 'could not find or access' not in public_key_copy.msg | default('')
   tags: [ssh, keys]
 
 - name: Copy SSH config for dev_user
   become: true
-  copy:
+  ansible.builtin.copy:
     src: "{{ lookup('env', 'HOME') + '/.ssh/config' }}"
     dest: "/home/{{ dev_user }}/.ssh/config"
     owner: "{{ dev_user }}"
     group: "{{ dev_user }}"
-    mode: '0600'
+    mode: "0600"
   when: ansible_connection not in ["docker", "local"]
-  ignore_errors: yes
+  register: ssh_config_copy
+  failed_when: ssh_config_copy is failed and 'could not find or access' not in ssh_config_copy.msg | default('')
   tags: [ssh, config]
 
 - name: Ensure known_hosts includes GitHub for dev_user
   become: true
   become_user: "{{ dev_user }}"
-  shell: ssh-keyscan github.com >> "$HOME/.ssh/known_hosts"
+  ansible.builtin.shell: ssh-keyscan github.com >> "$HOME/.ssh/known_hosts"
   args:
     creates: "/home/{{ dev_user }}/.ssh/known_hosts"
   tags: [ssh, config, github]
-

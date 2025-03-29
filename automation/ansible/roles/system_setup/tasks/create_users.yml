@@ -1,33 +1,34 @@
+---
 - name: Create ansible user
   become: true
-  user:
+  ansible.builtin.user:
     name: ansible
     groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
     shell: /bin/bash
-    create_home: yes
+    create_home: true
   when: "'containers' in group_names"
 
 - name: Allow ansible user to run sudo
   become: true
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/ansible"
     content: "ansible ALL=(ALL) NOPASSWD: ALL"
-    mode: 0440
+    mode: "0440"
   when: "'containers' in group_names"
 
 - name: Create dev_user
   become: true
-  user:
+  ansible.builtin.user:
     name: "{{ dev_user }}"
     groups: "{{ 'sudo' if ansible_os_family == 'Debian' else 'wheel' }}"
     shell: /bin/bash
-    create_home: yes
+    create_home: true
   when: "'containers' in group_names"
 
 - name: Allow dev_user to run sudo
   become: true
-  copy:
+  ansible.builtin.copy:
     dest: "/etc/sudoers.d/{{ dev_user }}"
     content: "{{ dev_user }} ALL=(ALL) NOPASSWD: ALL"
-    mode: 0440
+    mode: "0440"
   when: "'containers' in group_names"

@@ -1,6 +1,15 @@
+---
+- name: Download rustup installer script
+  ansible.builtin.get_url:
+    url: https://sh.rustup.rs
+    dest: "/tmp/rustup-init.sh"
+    mode: "0755"
+  tags: [rust, install]
+
 - name: Install Rust for dev_user (if not present)
-  shell: |
-    curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  ansible.builtin.shell: |
+    set -euo pipefail
+    /tmp/rustup-init.sh -y
   args:
     creates: "/home/{{ dev_user }}/.cargo/bin/rustc"
     executable: /bin/bash
@@ -9,10 +18,13 @@
   tags: [rust, install]
 
 - name: Set default Rust version for dev_user
-  shell: |
-    source "$HOME/.cargo/env" && rustup default stable
+  ansible.builtin.shell: |
+    set -euo pipefail
+    source "$HOME/.cargo/env"
+    rustup default stable
   args:
     executable: /bin/bash
   become: true
   become_user: "{{ dev_user }}"
+  changed_when: true
   tags: [rust, config]

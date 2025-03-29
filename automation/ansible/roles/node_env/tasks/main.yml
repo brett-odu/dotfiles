@@ -1,12 +1,13 @@
+---
 - name: Install NVM and Node
-  include_tasks: install_nvm.yml
+  ansible.builtin.include_tasks: install_nvm.yml
   tags:
     - nvm
     - node
     - setup
 
 - name: Install TypeScript
-  include_tasks: install_typescript.yml
+  ansible.builtin.include_tasks: install_typescript.yml
   tags:
     - typescript
     - node
