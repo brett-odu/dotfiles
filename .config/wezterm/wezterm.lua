@@ -20,7 +20,7 @@ return {
     top = 2,
     bottom = 2,
   },
-  window_background_opacity = 0.85,
+  window_background_opacity = 0.90,
   keys = {
     { key = "h", mods = "CTRL|SHIFT", action = wezterm.action{ActivatePaneDirection="Left"} },
     { key = "j", mods = "CTRL|SHIFT", action = wezterm.action{ActivatePaneDirection="Down"} },
