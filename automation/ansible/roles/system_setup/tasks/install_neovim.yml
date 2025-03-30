@@ -56,7 +56,6 @@
   become: true
   ansible.builtin.git:
     repo: "{{ nvim_repo_url }}"
-    dest: "/usr/local/src/neovim"
     # version: stable # <omitted> == nightly
     dest: "/tmp/neovim"
     update: true
