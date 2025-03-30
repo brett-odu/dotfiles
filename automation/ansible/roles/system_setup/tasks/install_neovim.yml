@@ -58,6 +58,7 @@
     repo: "{{ nvim_repo_url }}"
     dest: "/usr/local/src/neovim"
     # version: stable # <omitted> == nightly
+    dest: "/tmp/neovim"
     update: true
   tags:
     - neovim
@@ -70,7 +71,7 @@
       become: true
       ansible.builtin.command:
         cmd: "make CMAKE_BUILD_TYPE={{ nvim_build_type }}"
-        chdir: "/usr/local/src/neovim"
+        chdir: "/tmp/neovim"
       register: build_result
       changed_when: "'Built target' in build_result.stdout"
       failed_when: build_result.rc != 0
@@ -83,7 +84,7 @@
   become: true
   ansible.builtin.command:
     cmd: "make install"
-    chdir: "/usr/local/src/neovim"
+    chdir: "/tmp/neovim"
   changed_when: true
   tags:
     - neovim
@@ -125,3 +126,11 @@
   tags:
     - neovim
     - verify
+
+- name: Clean up Neovim source after install
+  ansible.builtin.file:
+    path: "/tmp/neovim"
+    state: absent
+  tags:
+    - neovim
+    - cleanup
