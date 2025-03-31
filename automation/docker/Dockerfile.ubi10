@@ -1,4 +1,10 @@
+# This is only meant to be used on licensed Red Hat machines.
+
 FROM registry.redhat.io/ubi10-beta/ubi:10.0-beta-1741674993
+
+LABEL org.opencontainers.image.source="https://github.com/brett-odu/dotfiles"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.description="Custom Ansible base image for testing dotfiles"
 
 # Install required dependencies and enable EPEL
 RUN dnf install -y sudo python3 python3-pip epel-release && \
@@ -8,7 +14,7 @@ RUN dnf install -y sudo python3 python3-pip epel-release && \
 RUN useradd -m ansible && \
     echo 'ansible ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/ansible
 
-# # Fix Ansible temporary directory permissions
+# Fix Ansible temporary directory permissions
 RUN mkdir -p /tmp/.ansible/tmp && chmod -R 777 /tmp/.ansible
 
 USER ansible

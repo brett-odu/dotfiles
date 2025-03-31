@@ -7,6 +7,19 @@
     - setup
     - epel
 
+- name: Replace curl-minimal with curl (RHEL 9 container workaround)
+  become: true
+  ansible.builtin.dnf:
+    name: curl
+    state: present
+    allow_downgrade: true
+    allowerasing: true
+  when:
+    - ansible_os_family == "RedHat"
+    - ansible_distribution_major_version | int == 9
+    - ansible_connection: in ["docker"]
+  tags: [neovim, curl, workaround]
+
 - name: Install Neovim build prerequisites (Debian)
   become: true
   ansible.builtin.apt:
@@ -127,6 +140,7 @@
     - verify
 
 - name: Clean up Neovim source after install
+  become: true
   ansible.builtin.file:
     path: "/tmp/neovim"
     state: absent

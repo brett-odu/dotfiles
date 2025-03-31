@@ -1,5 +1,9 @@
 FROM rockylinux:9
 
+LABEL org.opencontainers.image.source="https://github.com/brett-odu/dotfiles"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.description="Custom Ansible base image for testing dotfiles"
+
 # Install required dependencies and enable EPEL
 RUN dnf install -y sudo python3 python3-pip epel-release && \
     dnf config-manager --set-enabled crb

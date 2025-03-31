@@ -21,7 +21,6 @@
 
   roles:
     - system_setup # Has create_users.yml
-    - ssh_setup
     - language_env
     - node_env
     - devops

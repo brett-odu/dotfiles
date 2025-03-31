@@ -32,7 +32,7 @@ This limits the run to just one target machine. You can also combine multiple ho
 
 ### Run a single role (via tags)
 ```bash
-ansible-playbook -i inventory/hosts.yml playbook.yml --tags ssh_setup
+ansible-playbook -i inventory/hosts.yml playbook.yml --tags python
 ```
 
 ### Start at a specific task

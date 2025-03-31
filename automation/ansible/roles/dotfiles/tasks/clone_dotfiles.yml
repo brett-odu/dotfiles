@@ -1,12 +1,9 @@
----
 - name: Clone dotfiles repo for dev_user
   become: true
   become_user: "{{ dev_user }}"
   ansible.builtin.git:
-    repo: "git@github.com:brett-odu/dotfiles.git"
+    repo: "https://github.com/brett-odu/dotfiles.git"
     dest: "/home/{{ dev_user }}/.dotfiles"
     version: develop
-    accept_hostkey: true
-  environment:
-    GIT_SSH_COMMAND: "ssh -F /home/{{ dev_user }}/.ssh/config -o StrictHostKeyChecking=no"
+    update: yes
   tags: [dotfiles, git]

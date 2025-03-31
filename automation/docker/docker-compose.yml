@@ -4,74 +4,62 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.debian
-    container_name: ansible_debian
+    container_name: debian12_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
+
   ubuntu:
     build:
       context: .
       dockerfile: Dockerfile.ubuntu
-    container_name: ansible_ubuntu
+    container_name: ubuntu24_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
   fedora:
     build:
       context: .
       dockerfile: Dockerfile.fedora
-    container_name: ansible_fedora
+    container_name: fedora42_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
   centos:
     build:
       context: .
       dockerfile: Dockerfile.centos
-    container_name: ansible_centos
+    container_name: centos10_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
   rocky:
     build:
       context: .
       dockerfile: Dockerfile.rocky
-    container_name: ansible_rocky
+    container_name: rocky9_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
   kali:
     build:
       context: .
       dockerfile: Dockerfile.kali
-    container_name: ansible_kali
+    container_name: kali2025_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
 
   alma:
     build:
       context: .
       dockerfile: Dockerfile.alma
-    container_name: ansible_alma
+    container_name: alma9_ansible
     restart: always
     tty: true
-    volumes:
-      - ~/.ssh:/home/ansible/.ssh:ro
-      - ~/.ssh/config:/home/ansible/.ssh/config:ro
+
+  rhel:
+    build:
+      context: .
+      dockerfile: Dockerfile.rhel
+    container_name: rhel10_ansible
+    restart: always
+    tty: true

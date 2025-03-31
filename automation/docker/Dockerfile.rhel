@@ -1,0 +1,7 @@
+# This can be used on machines other than licensed Red Hat ones
+
+FROM ghcr.io/brett-odu/rhel10_ansible:latest
+
+USER ansible
+WORKDIR /home/ansible
+CMD ["/bin/bash"]

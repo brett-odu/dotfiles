@@ -24,7 +24,6 @@ This setup is designed for me, fellow devs, and the occasional brave contributor
 │   ├── language_env/         # Rust, Go, Ruby, Python environments
 │   ├── node_env/             # Node, NVM, TypeScript
 │   ├── shell_setup/          # Zsh, default shell, etc.
-│   ├── ssh_setup/            # Keys, config, known_hosts
 │   ├── system_cleanup/       # Final polishing + user perms
 │   └── system_setup/         # Users, packages, Neovim, fonts, etc.
 ```
